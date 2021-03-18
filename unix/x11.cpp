@@ -23,7 +23,6 @@
 #include "blit.h"
 #include "display.h"
 
-// Wrapper struct to make generic XvImage vs XImage
 struct Image
 {
 	// TODO: replace XImage* with something?
@@ -38,191 +37,194 @@ struct Image
 
 struct GUIData
 {
-	int				depth;
-	int				pixel_format;
-	int				bytes_per_pixel;
-	Image			*image;
-	uint8			*snes_buffer;
-	uint8			*filter_buffer;
-	uint8			*blit_screen;
-	uint32			blit_screen_pitch;
-	bool8			need_convert;
-	int				x_offset;
-	int				y_offset;
+	int depth;
+	int pixel_format;
+	int bytes_per_pixel;
+	uint32 red_shift;
+	uint32 blue_shift;
+	uint32 green_shift;
+	uint32 red_size;
+	uint32 green_size;
+	uint32 blue_size;
+	Image *image;
+	uint8 *snes_buffer;
+	uint8 *filter_buffer;
+	uint8 *blit_screen;
+	uint32 blit_screen_pitch;
+	bool8 need_convert;
+	int x_offset;
+	int y_offset;
 };
 
-static struct GUIData	GUI;
+static struct GUIData GUI;
 
-typedef	std::pair<std::string, std::string>	strpair_t;
-extern	std::vector<strpair_t>				keymaps;
+typedef std::pair<std::string, std::string> strpair_t;
+extern std::vector<strpair_t> keymaps;
 
-typedef	void (* Blitter) (uint8 *, int, uint8 *, int, int, int);
+typedef void (*Blitter)(uint8 *, int, uint8 *, int, int, int);
 
-static void SetXRepeat (bool8);
-static void SetupImage (void);
-static void TakedownImage (void);
-static void SetupXImage (void);
-static void Repaint (bool8);
-static void Convert16To24 (int, int);
-static void Convert16To24Packed (int, int);
+static void SetupImage(void);
+static void TakedownImage(void);
+static void SetupXImage(void);
+static void Repaint(bool8);
+static void Convert16To24(int, int);
+static void Convert16To24Packed(int, int);
 
-void S9xExtraDisplayUsage (void){}
+void S9xExtraDisplayUsage(void) {}
 
-void S9xParseDisplayArg (char **argv, int &i, int argc){}
+void S9xParseDisplayArg(char **argv, int &i, int argc) {}
 
-const char * S9xParseDisplayConfig (ConfigFile &conf, int pass)
+const char *S9xParseDisplayConfig(ConfigFile &conf, int pass)
 {
 	if (pass != 1)
 		return ("Unix/X11");
 
 	if (!conf.GetBool("Unix::ClearAllControls", false))
 	{
-		keymaps.push_back(strpair_t("K00:k",            "Joypad1 Right"));
-		keymaps.push_back(strpair_t("K00:Right",        "Joypad1 Right"));
-		keymaps.push_back(strpair_t("K00:h",            "Joypad1 Left"));
-		keymaps.push_back(strpair_t("K00:Left",         "Joypad1 Left"));
-		keymaps.push_back(strpair_t("K00:j",            "Joypad1 Down"));
-		keymaps.push_back(strpair_t("K00:n",            "Joypad1 Down"));
-		keymaps.push_back(strpair_t("K00:Down",         "Joypad1 Down"));
-		keymaps.push_back(strpair_t("K00:u",            "Joypad1 Up"));
-		keymaps.push_back(strpair_t("K00:Up",           "Joypad1 Up"));
-		keymaps.push_back(strpair_t("K00:Return",       "Joypad1 Start"));
-		keymaps.push_back(strpair_t("K00:space",        "Joypad1 Select"));
-		keymaps.push_back(strpair_t("K00:S+d",          "Joypad1 ToggleTurbo A"));
-		keymaps.push_back(strpair_t("K00:C+d",          "Joypad1 ToggleSticky A"));
-		keymaps.push_back(strpair_t("K00:d",            "Joypad1 A"));
-		keymaps.push_back(strpair_t("K00:S+c",          "Joypad1 ToggleTurbo B"));
-		keymaps.push_back(strpair_t("K00:C+c",          "Joypad1 ToggleSticky B"));
-		keymaps.push_back(strpair_t("K00:c",            "Joypad1 B"));
-		keymaps.push_back(strpair_t("K00:S+s",          "Joypad1 ToggleTurbo X"));
-		keymaps.push_back(strpair_t("K00:C+s",          "Joypad1 ToggleSticky X"));
-		keymaps.push_back(strpair_t("K00:s",            "Joypad1 X"));
-		keymaps.push_back(strpair_t("K00:S+x",          "Joypad1 ToggleTurbo Y"));
-		keymaps.push_back(strpair_t("K00:C+x",          "Joypad1 ToggleSticky Y"));
-		keymaps.push_back(strpair_t("K00:x",            "Joypad1 Y"));
-		keymaps.push_back(strpair_t("K00:S+a",          "Joypad1 ToggleTurbo L"));
-		keymaps.push_back(strpair_t("K00:S+v",          "Joypad1 ToggleTurbo L"));
-		keymaps.push_back(strpair_t("K00:C+a",          "Joypad1 ToggleSticky L"));
-		keymaps.push_back(strpair_t("K00:C+v",          "Joypad1 ToggleSticky L"));
-		keymaps.push_back(strpair_t("K00:a",            "Joypad1 L"));
-		keymaps.push_back(strpair_t("K00:v",            "Joypad1 L"));
-		keymaps.push_back(strpair_t("K00:S+z",          "Joypad1 ToggleTurbo R"));
-		keymaps.push_back(strpair_t("K00:C+z",          "Joypad1 ToggleSticky R"));
-		keymaps.push_back(strpair_t("K00:z",            "Joypad1 R"));
+		keymaps.push_back(strpair_t("K00:k", "Joypad1 Right"));
+		keymaps.push_back(strpair_t("K00:Right", "Joypad1 Right"));
+		keymaps.push_back(strpair_t("K00:h", "Joypad1 Left"));
+		keymaps.push_back(strpair_t("K00:Left", "Joypad1 Left"));
+		keymaps.push_back(strpair_t("K00:j", "Joypad1 Down"));
+		keymaps.push_back(strpair_t("K00:n", "Joypad1 Down"));
+		keymaps.push_back(strpair_t("K00:Down", "Joypad1 Down"));
+		keymaps.push_back(strpair_t("K00:u", "Joypad1 Up"));
+		keymaps.push_back(strpair_t("K00:Up", "Joypad1 Up"));
+		keymaps.push_back(strpair_t("K00:Return", "Joypad1 Start"));
+		keymaps.push_back(strpair_t("K00:space", "Joypad1 Select"));
+		keymaps.push_back(strpair_t("K00:S+d", "Joypad1 ToggleTurbo A"));
+		keymaps.push_back(strpair_t("K00:C+d", "Joypad1 ToggleSticky A"));
+		keymaps.push_back(strpair_t("K00:d", "Joypad1 A"));
+		keymaps.push_back(strpair_t("K00:S+c", "Joypad1 ToggleTurbo B"));
+		keymaps.push_back(strpair_t("K00:C+c", "Joypad1 ToggleSticky B"));
+		keymaps.push_back(strpair_t("K00:c", "Joypad1 B"));
+		keymaps.push_back(strpair_t("K00:S+s", "Joypad1 ToggleTurbo X"));
+		keymaps.push_back(strpair_t("K00:C+s", "Joypad1 ToggleSticky X"));
+		keymaps.push_back(strpair_t("K00:s", "Joypad1 X"));
+		keymaps.push_back(strpair_t("K00:S+x", "Joypad1 ToggleTurbo Y"));
+		keymaps.push_back(strpair_t("K00:C+x", "Joypad1 ToggleSticky Y"));
+		keymaps.push_back(strpair_t("K00:x", "Joypad1 Y"));
+		keymaps.push_back(strpair_t("K00:S+a", "Joypad1 ToggleTurbo L"));
+		keymaps.push_back(strpair_t("K00:S+v", "Joypad1 ToggleTurbo L"));
+		keymaps.push_back(strpair_t("K00:C+a", "Joypad1 ToggleSticky L"));
+		keymaps.push_back(strpair_t("K00:C+v", "Joypad1 ToggleSticky L"));
+		keymaps.push_back(strpair_t("K00:a", "Joypad1 L"));
+		keymaps.push_back(strpair_t("K00:v", "Joypad1 L"));
+		keymaps.push_back(strpair_t("K00:S+z", "Joypad1 ToggleTurbo R"));
+		keymaps.push_back(strpair_t("K00:C+z", "Joypad1 ToggleSticky R"));
+		keymaps.push_back(strpair_t("K00:z", "Joypad1 R"));
 
-		keymaps.push_back(strpair_t("K00:KP_Left",      "Joypad2 Left"));
-		keymaps.push_back(strpair_t("K00:KP_Right",     "Joypad2 Right"));
-		keymaps.push_back(strpair_t("K00:KP_Up",        "Joypad2 Up"));
-		keymaps.push_back(strpair_t("K00:KP_Down",      "Joypad2 Down"));
-		keymaps.push_back(strpair_t("K00:KP_Enter",     "Joypad2 Start"));
-		keymaps.push_back(strpair_t("K00:KP_Add",       "Joypad2 Select"));
-		keymaps.push_back(strpair_t("K00:Prior",        "Joypad2 A"));
-		keymaps.push_back(strpair_t("K00:Next",         "Joypad2 B"));
-		keymaps.push_back(strpair_t("K00:Home",         "Joypad2 X"));
-		keymaps.push_back(strpair_t("K00:End",          "Joypad2 Y"));
-		keymaps.push_back(strpair_t("K00:Insert",       "Joypad2 L"));
-		keymaps.push_back(strpair_t("K00:Delete",       "Joypad2 R"));
+		keymaps.push_back(strpair_t("K00:KP_Left", "Joypad2 Left"));
+		keymaps.push_back(strpair_t("K00:KP_Right", "Joypad2 Right"));
+		keymaps.push_back(strpair_t("K00:KP_Up", "Joypad2 Up"));
+		keymaps.push_back(strpair_t("K00:KP_Down", "Joypad2 Down"));
+		keymaps.push_back(strpair_t("K00:KP_Enter", "Joypad2 Start"));
+		keymaps.push_back(strpair_t("K00:KP_Add", "Joypad2 Select"));
+		keymaps.push_back(strpair_t("K00:Prior", "Joypad2 A"));
+		keymaps.push_back(strpair_t("K00:Next", "Joypad2 B"));
+		keymaps.push_back(strpair_t("K00:Home", "Joypad2 X"));
+		keymaps.push_back(strpair_t("K00:End", "Joypad2 Y"));
+		keymaps.push_back(strpair_t("K00:Insert", "Joypad2 L"));
+		keymaps.push_back(strpair_t("K00:Delete", "Joypad2 R"));
 
-		keymaps.push_back(strpair_t("K00:A+F4",         "SoundChannel0"));
-		keymaps.push_back(strpair_t("K00:C+F4",         "SoundChannel0"));
-		keymaps.push_back(strpair_t("K00:A+F5",         "SoundChannel1"));
-		keymaps.push_back(strpair_t("K00:C+F5",         "SoundChannel1"));
-		keymaps.push_back(strpair_t("K00:A+F6",         "SoundChannel2"));
-		keymaps.push_back(strpair_t("K00:C+F6",         "SoundChannel2"));
-		keymaps.push_back(strpair_t("K00:A+F7",         "SoundChannel3"));
-		keymaps.push_back(strpair_t("K00:C+F7",         "SoundChannel3"));
-		keymaps.push_back(strpair_t("K00:A+F8",         "SoundChannel4"));
-		keymaps.push_back(strpair_t("K00:C+F8",         "SoundChannel4"));
-		keymaps.push_back(strpair_t("K00:A+F9",         "SoundChannel5"));
-		keymaps.push_back(strpair_t("K00:C+F9",         "SoundChannel5"));
-		keymaps.push_back(strpair_t("K00:A+F10",        "SoundChannel6"));
-		keymaps.push_back(strpair_t("K00:C+F10",        "SoundChannel6"));
-		keymaps.push_back(strpair_t("K00:A+F11",        "SoundChannel7"));
-		keymaps.push_back(strpair_t("K00:C+F11",        "SoundChannel7"));
-		keymaps.push_back(strpair_t("K00:A+F12",        "SoundChannelsOn"));
-		keymaps.push_back(strpair_t("K00:C+F12",        "SoundChannelsOn"));
+		keymaps.push_back(strpair_t("K00:A+F4", "SoundChannel0"));
+		keymaps.push_back(strpair_t("K00:C+F4", "SoundChannel0"));
+		keymaps.push_back(strpair_t("K00:A+F5", "SoundChannel1"));
+		keymaps.push_back(strpair_t("K00:C+F5", "SoundChannel1"));
+		keymaps.push_back(strpair_t("K00:A+F6", "SoundChannel2"));
+		keymaps.push_back(strpair_t("K00:C+F6", "SoundChannel2"));
+		keymaps.push_back(strpair_t("K00:A+F7", "SoundChannel3"));
+		keymaps.push_back(strpair_t("K00:C+F7", "SoundChannel3"));
+		keymaps.push_back(strpair_t("K00:A+F8", "SoundChannel4"));
+		keymaps.push_back(strpair_t("K00:C+F8", "SoundChannel4"));
+		keymaps.push_back(strpair_t("K00:A+F9", "SoundChannel5"));
+		keymaps.push_back(strpair_t("K00:C+F9", "SoundChannel5"));
+		keymaps.push_back(strpair_t("K00:A+F10", "SoundChannel6"));
+		keymaps.push_back(strpair_t("K00:C+F10", "SoundChannel6"));
+		keymaps.push_back(strpair_t("K00:A+F11", "SoundChannel7"));
+		keymaps.push_back(strpair_t("K00:C+F11", "SoundChannel7"));
+		keymaps.push_back(strpair_t("K00:A+F12", "SoundChannelsOn"));
+		keymaps.push_back(strpair_t("K00:C+F12", "SoundChannelsOn"));
 
-		keymaps.push_back(strpair_t("K00:S+1",          "BeginRecordingMovie"));
-		keymaps.push_back(strpair_t("K00:S+2",          "EndRecordingMovie"));
-		keymaps.push_back(strpair_t("K00:S+3",          "LoadMovie"));
-		keymaps.push_back(strpair_t("K00:A+F1",         "SaveSPC"));
-		keymaps.push_back(strpair_t("K00:C+F1",         "SaveSPC"));
-		keymaps.push_back(strpair_t("K00:F10",          "LoadOopsFile"));
-		keymaps.push_back(strpair_t("K00:A+F2",         "LoadFreezeFile"));
-		keymaps.push_back(strpair_t("K00:C+F2",         "LoadFreezeFile"));
-		keymaps.push_back(strpair_t("K00:F11",          "LoadFreezeFile"));
-		keymaps.push_back(strpair_t("K00:A+F3",         "SaveFreezeFile"));
-		keymaps.push_back(strpair_t("K00:C+F3",         "SaveFreezeFile"));
-		keymaps.push_back(strpair_t("K00:F12",          "SaveFreezeFile"));
-		keymaps.push_back(strpair_t("K00:F1",           "QuickLoad000"));
-		keymaps.push_back(strpair_t("K00:F2",           "QuickLoad001"));
-		keymaps.push_back(strpair_t("K00:F3",           "QuickLoad002"));
-		keymaps.push_back(strpair_t("K00:F4",           "QuickLoad003"));
-		keymaps.push_back(strpair_t("K00:F5",           "QuickLoad004"));
-		keymaps.push_back(strpair_t("K00:F6",           "QuickLoad005"));
-		keymaps.push_back(strpair_t("K00:F7",           "QuickLoad006"));
-		keymaps.push_back(strpair_t("K00:F8",           "QuickLoad007"));
-		keymaps.push_back(strpair_t("K00:F9",           "QuickLoad008"));
-		keymaps.push_back(strpair_t("K00:S+F1",         "QuickSave000"));
-		keymaps.push_back(strpair_t("K00:S+F2",         "QuickSave001"));
-		keymaps.push_back(strpair_t("K00:S+F3",         "QuickSave002"));
-		keymaps.push_back(strpair_t("K00:S+F4",         "QuickSave003"));
-		keymaps.push_back(strpair_t("K00:S+F5",         "QuickSave004"));
-		keymaps.push_back(strpair_t("K00:S+F6",         "QuickSave005"));
-		keymaps.push_back(strpair_t("K00:S+F7",         "QuickSave006"));
-		keymaps.push_back(strpair_t("K00:S+F8",         "QuickSave007"));
-		keymaps.push_back(strpair_t("K00:S+F9",         "QuickSave008"));
+		keymaps.push_back(strpair_t("K00:S+1", "BeginRecordingMovie"));
+		keymaps.push_back(strpair_t("K00:S+2", "EndRecordingMovie"));
+		keymaps.push_back(strpair_t("K00:S+3", "LoadMovie"));
+		keymaps.push_back(strpair_t("K00:A+F1", "SaveSPC"));
+		keymaps.push_back(strpair_t("K00:C+F1", "SaveSPC"));
+		keymaps.push_back(strpair_t("K00:F10", "LoadOopsFile"));
+		keymaps.push_back(strpair_t("K00:A+F2", "LoadFreezeFile"));
+		keymaps.push_back(strpair_t("K00:C+F2", "LoadFreezeFile"));
+		keymaps.push_back(strpair_t("K00:F11", "LoadFreezeFile"));
+		keymaps.push_back(strpair_t("K00:A+F3", "SaveFreezeFile"));
+		keymaps.push_back(strpair_t("K00:C+F3", "SaveFreezeFile"));
+		keymaps.push_back(strpair_t("K00:F12", "SaveFreezeFile"));
+		keymaps.push_back(strpair_t("K00:F1", "QuickLoad000"));
+		keymaps.push_back(strpair_t("K00:F2", "QuickLoad001"));
+		keymaps.push_back(strpair_t("K00:F3", "QuickLoad002"));
+		keymaps.push_back(strpair_t("K00:F4", "QuickLoad003"));
+		keymaps.push_back(strpair_t("K00:F5", "QuickLoad004"));
+		keymaps.push_back(strpair_t("K00:F6", "QuickLoad005"));
+		keymaps.push_back(strpair_t("K00:F7", "QuickLoad006"));
+		keymaps.push_back(strpair_t("K00:F8", "QuickLoad007"));
+		keymaps.push_back(strpair_t("K00:F9", "QuickLoad008"));
+		keymaps.push_back(strpair_t("K00:S+F1", "QuickSave000"));
+		keymaps.push_back(strpair_t("K00:S+F2", "QuickSave001"));
+		keymaps.push_back(strpair_t("K00:S+F3", "QuickSave002"));
+		keymaps.push_back(strpair_t("K00:S+F4", "QuickSave003"));
+		keymaps.push_back(strpair_t("K00:S+F5", "QuickSave004"));
+		keymaps.push_back(strpair_t("K00:S+F6", "QuickSave005"));
+		keymaps.push_back(strpair_t("K00:S+F7", "QuickSave006"));
+		keymaps.push_back(strpair_t("K00:S+F8", "QuickSave007"));
+		keymaps.push_back(strpair_t("K00:S+F9", "QuickSave008"));
 
-		keymaps.push_back(strpair_t("K00:Scroll_Lock",  "Pause"));
-		keymaps.push_back(strpair_t("K00:CS+Escape",    "Reset"));
-		keymaps.push_back(strpair_t("K00:S+Escape",     "SoftReset"));
-		keymaps.push_back(strpair_t("K00:Escape",       "ExitEmu"));
-		keymaps.push_back(strpair_t("K00:Tab",          "EmuTurbo"));
-		keymaps.push_back(strpair_t("K00:S+Tab",        "ToggleEmuTurbo"));
-		keymaps.push_back(strpair_t("K00:A+equal",      "IncEmuTurbo"));
-		keymaps.push_back(strpair_t("K00:A+minus",      "DecEmuTurbo"));
-		keymaps.push_back(strpair_t("K00:C+equal",      "IncTurboSpeed"));
-		keymaps.push_back(strpair_t("K00:C+minus",      "DecTurboSpeed"));
-		keymaps.push_back(strpair_t("K00:equal",        "IncFrameRate"));
-		keymaps.push_back(strpair_t("K00:minus",        "DecFrameRate"));
-		keymaps.push_back(strpair_t("K00:S+equal",      "IncFrameTime"));
-		keymaps.push_back(strpair_t("K00:S+minus",      "DecFrameTime"));
-		keymaps.push_back(strpair_t("K00:6",            "SwapJoypads"));
-		keymaps.push_back(strpair_t("K00:Print",        "Screenshot"));
+		keymaps.push_back(strpair_t("K00:Scroll_Lock", "Pause"));
+		keymaps.push_back(strpair_t("K00:CS+Escape", "Reset"));
+		keymaps.push_back(strpair_t("K00:S+Escape", "SoftReset"));
+		keymaps.push_back(strpair_t("K00:Escape", "ExitEmu"));
+		keymaps.push_back(strpair_t("K00:Tab", "EmuTurbo"));
+		keymaps.push_back(strpair_t("K00:S+Tab", "ToggleEmuTurbo"));
+		keymaps.push_back(strpair_t("K00:A+equal", "IncEmuTurbo"));
+		keymaps.push_back(strpair_t("K00:A+minus", "DecEmuTurbo"));
+		keymaps.push_back(strpair_t("K00:C+equal", "IncTurboSpeed"));
+		keymaps.push_back(strpair_t("K00:C+minus", "DecTurboSpeed"));
+		keymaps.push_back(strpair_t("K00:equal", "IncFrameRate"));
+		keymaps.push_back(strpair_t("K00:minus", "DecFrameRate"));
+		keymaps.push_back(strpair_t("K00:S+equal", "IncFrameTime"));
+		keymaps.push_back(strpair_t("K00:S+minus", "DecFrameTime"));
+		keymaps.push_back(strpair_t("K00:6", "SwapJoypads"));
+		keymaps.push_back(strpair_t("K00:Print", "Screenshot"));
 
-		keymaps.push_back(strpair_t("K00:1",            "ToggleBG0"));
-		keymaps.push_back(strpair_t("K00:2",            "ToggleBG1"));
-		keymaps.push_back(strpair_t("K00:3",            "ToggleBG2"));
-		keymaps.push_back(strpair_t("K00:4",            "ToggleBG3"));
-		keymaps.push_back(strpair_t("K00:5",            "ToggleSprites"));
-		keymaps.push_back(strpair_t("K00:9",            "ToggleTransparency"));
-		keymaps.push_back(strpair_t("K00:BackSpace",    "ClipWindows"));
-		keymaps.push_back(strpair_t("K00:A+Escape",     "Debugger"));
+		keymaps.push_back(strpair_t("K00:1", "ToggleBG0"));
+		keymaps.push_back(strpair_t("K00:2", "ToggleBG1"));
+		keymaps.push_back(strpair_t("K00:3", "ToggleBG2"));
+		keymaps.push_back(strpair_t("K00:4", "ToggleBG3"));
+		keymaps.push_back(strpair_t("K00:5", "ToggleSprites"));
+		keymaps.push_back(strpair_t("K00:9", "ToggleTransparency"));
+		keymaps.push_back(strpair_t("K00:BackSpace", "ClipWindows"));
+		keymaps.push_back(strpair_t("K00:A+Escape", "Debugger"));
 
-		keymaps.push_back(strpair_t("M00:B0",           "{Mouse1 L,Superscope Fire,Justifier1 Trigger}"));
-		keymaps.push_back(strpair_t("M00:B1",           "{Justifier1 AimOffscreen Trigger,Superscope AimOffscreen}"));
-		keymaps.push_back(strpair_t("M00:B2",           "{Mouse1 R,Superscope Cursor,Justifier1 Start}"));
-		keymaps.push_back(strpair_t("M00:Pointer",      "Pointer Mouse1+Superscope+Justifier1"));
-		keymaps.push_back(strpair_t("K00:grave",        "Superscope ToggleTurbo"));
-		keymaps.push_back(strpair_t("K00:slash",        "Superscope Pause"));
+		keymaps.push_back(strpair_t("M00:B0", "{Mouse1 L,Superscope Fire,Justifier1 Trigger}"));
+		keymaps.push_back(strpair_t("M00:B1", "{Justifier1 AimOffscreen Trigger,Superscope AimOffscreen}"));
+		keymaps.push_back(strpair_t("M00:B2", "{Mouse1 R,Superscope Cursor,Justifier1 Start}"));
+		keymaps.push_back(strpair_t("M00:Pointer", "Pointer Mouse1+Superscope+Justifier1"));
+		keymaps.push_back(strpair_t("K00:grave", "Superscope ToggleTurbo"));
+		keymaps.push_back(strpair_t("K00:slash", "Superscope Pause"));
 
-		keymaps.push_back(strpair_t("K00:r",            "Rewind"));
-        keymaps.push_back(strpair_t("K00:l",            "Advance"));
+		keymaps.push_back(strpair_t("K00:r", "Rewind"));
+		keymaps.push_back(strpair_t("K00:l", "Advance"));
 	}
 
 	return ("Unix/X11");
 }
 
-static void FatalError (const char *str)
+static void FatalError(const char *str)
 {
 	fprintf(stderr, "%s\n", str);
 	S9xExit();
 }
 
-void S9xInitDisplay (int argc, char **argv)
+void S9xInitDisplay(int argc, char **argv)
 {
-	// TODO: Replace Display with something?
-
 	// Init various scale-filters
 	S9xBlitFilterInit();
 	S9xBlit2xSaIFilterInit();
@@ -231,54 +233,57 @@ void S9xInitDisplay (int argc, char **argv)
 	SetupImage();
 }
 
-void S9xDeinitDisplay (void)
+void S9xDeinitDisplay(void)
 {
 	TakedownImage();
-	
+
 	S9xBlitFilterDeinit();
 	S9xBlit2xSaIFilterDeinit();
 	S9xBlitHQ2xFilterDeinit();
 }
 
-static void SetupImage (void)
+static void SetupImage(void)
 {
 	TakedownImage();
 
 	// Create new image struct
-	GUI.image = (Image *) calloc(sizeof(Image), 1);
+	GUI.image = (Image *)calloc(sizeof(Image), 1);
 
 	SetupXImage();
 
 	// Setup SNES buffers
 	GFX.Pitch = SNES_WIDTH * 2 * 2;
-	GUI.snes_buffer = (uint8 *) calloc(GFX.Pitch * ((SNES_HEIGHT_EXTENDED + 4) * 2), 1);
+	GUI.snes_buffer = (uint8 *)calloc(GFX.Pitch * ((SNES_HEIGHT_EXTENDED + 4) * 2), 1);
 	if (!GUI.snes_buffer)
 		FatalError("Failed to allocate GUI.snes_buffer.");
 
-	GFX.Screen = (uint16 *) (GUI.snes_buffer + (GFX.Pitch * 2 * 2));
+	GFX.Screen = (uint16 *)(GUI.snes_buffer + (GFX.Pitch * 2 * 2));
 
-	GUI.filter_buffer = (uint8 *) calloc((SNES_WIDTH * 2) * 2 * (SNES_HEIGHT_EXTENDED * 2), 1);
+	GUI.filter_buffer = (uint8 *)calloc((SNES_WIDTH * 2) * 2 * (SNES_HEIGHT_EXTENDED * 2), 1);
 	if (!GUI.filter_buffer)
 		FatalError("Failed to allocate GUI.filter_buffer.");
 
 	if (GUI.depth == 15 || GUI.depth == 16)
 	{
 		GUI.blit_screen_pitch = GUI.image->bytes_per_line;
-		GUI.blit_screen       = (uint8 *) GUI.image->data;
-		GUI.need_convert      = FALSE;
+		GUI.blit_screen = (uint8 *)GUI.image->data;
+		GUI.need_convert = FALSE;
 	}
 	else
 	{
 		GUI.blit_screen_pitch = (SNES_WIDTH * 2) * 2;
-		GUI.blit_screen       = GUI.filter_buffer;
-		GUI.need_convert      = TRUE;
+		GUI.blit_screen = GUI.filter_buffer;
+		GUI.need_convert = TRUE;
 	}
-	if (GUI.need_convert) { printf("\tImage conversion needed before blit.\n"); }
+	if (GUI.need_convert)
+	{
+		printf("\tImage conversion needed before blit.\n");
+	}
 
 	S9xGraphicsInit();
 }
 
-static void TakedownImage (void)
+static void TakedownImage(void)
 {
 	if (GUI.snes_buffer)
 	{
@@ -301,7 +306,7 @@ static void TakedownImage (void)
 	S9xGraphicsDeinit();
 }
 
-static void SetupXImage (void)
+static void SetupXImage(void)
 {
 	// TODO: Replace with image creation not using X11
 	// GUI.image->ximage = XCreateImage(GUI.display, GUI.visual, GUI.depth, ZPixmap, 0, NULL, SNES_WIDTH * 2, SNES_HEIGHT_EXTENDED * 2, BitmapUnit(GUI.display), 0);
@@ -310,10 +315,10 @@ static void SetupXImage (void)
 	GUI.image->bytes_per_line = GUI.image->ximage->bytes_per_line;
 	GUI.image->data_size = GUI.image->bytes_per_line * GUI.image->height;
 
-	GUI.image->ximage->data = (char *) malloc(GUI.image->data_size);
+	GUI.image->ximage->data = (char *)malloc(GUI.image->data_size);
 	if (!GUI.image->ximage || !GUI.image->ximage->data)
 		FatalError("XCreateImage failed.");
-	printf("Created XImage, size %d\n",GUI.image->data_size);
+	printf("Created XImage, size %d\n", GUI.image->data_size);
 
 	// Set final values
 	GUI.image->bits_per_pixel = GUI.image->ximage->bits_per_pixel;
@@ -326,46 +331,45 @@ static void SetupXImage (void)
 #endif
 }
 
-void S9xPutImage (int width, int height)
+void S9xPutImage(int width, int height)
 {
-	static int	prevWidth = 0, prevHeight = 0;
-	int			copyWidth, copyHeight;
-	Blitter		blitFn = NULL;
+	static int prevWidth = 0, prevHeight = 0;
+	int copyWidth, copyHeight;
+	Blitter blitFn = NULL;
 
 	if (width <= SNES_WIDTH)
 	{
 		if (height > SNES_HEIGHT_EXTENDED)
 		{
-			copyWidth  = width * 2;
+			copyWidth = width * 2;
 			copyHeight = height;
 			blitFn = S9xBlitPixSimple2x1;
 		}
 		else
 		{
-			copyWidth  = width  * 2;
+			copyWidth = width * 2;
 			copyHeight = height * 2;
 		}
 	}
-	else
-	if (height <= SNES_HEIGHT_EXTENDED)
+	else if (height <= SNES_HEIGHT_EXTENDED)
 	{
-		copyWidth  = width;
+		copyWidth = width;
 		copyHeight = height * 2;
 	}
 	else
 	{
-		copyWidth  = width;
+		copyWidth = width;
 		copyHeight = height;
 		blitFn = S9xBlitPixSimple1x1;
 	}
-	blitFn((uint8 *) GFX.Screen, GFX.Pitch, GUI.blit_screen, GUI.blit_screen_pitch, width, height);
+	blitFn((uint8 *)GFX.Screen, GFX.Pitch, GUI.blit_screen, GUI.blit_screen_pitch, width, height);
 
 	if (height < prevHeight)
 	{
-		int	p = GUI.blit_screen_pitch >> 2;
+		int p = GUI.blit_screen_pitch >> 2;
 		for (int y = SNES_HEIGHT * 2; y < SNES_HEIGHT_EXTENDED * 2; y++)
 		{
-			uint32	*d = (uint32 *) (GUI.blit_screen + y * GUI.blit_screen_pitch);
+			uint32 *d = (uint32 *)(GUI.blit_screen + y * GUI.blit_screen_pitch);
 			for (int x = 0; x < p; x++)
 				*d++ = 0;
 		}
@@ -382,22 +386,22 @@ void S9xPutImage (int width, int height)
 	// TODO: Replace with some kind of image flushing logic
 	//Repaint(TRUE);
 
-	prevWidth  = width;
+	prevWidth = width;
 	prevHeight = height;
 }
 
-static void Convert16To24 (int width, int height){}
+static void Convert16To24(int width, int height){}
 {
 	if (GUI.pixel_format == 565)
 	{
 		for (int y = 0; y < height; y++)
 		{
-			uint16	*s = (uint16 *) (GUI.blit_screen + y * GUI.blit_screen_pitch);
-			uint32	*d = (uint32 *) (GUI.image->data + y * GUI.image->bytes_per_line);
+			uint16 *s = (uint16 *)(GUI.blit_screen + y * GUI.blit_screen_pitch);
+			uint32 *d = (uint32 *)(GUI.image->data + y * GUI.image->bytes_per_line);
 
 			for (int x = 0; x < width; x++)
 			{
-				uint32	pixel = *s++;
+				uint32 pixel = *s++;
 				*d++ = (((pixel >> 11) & 0x1f) << (GUI.red_shift + 3)) | (((pixel >> 6) & 0x1f) << (GUI.green_shift + 3)) | ((pixel & 0x1f) << (GUI.blue_shift + 3));
 			}
 		}
@@ -406,38 +410,38 @@ static void Convert16To24 (int width, int height){}
 	{
 		for (int y = 0; y < height; y++)
 		{
-			uint16	*s = (uint16 *) (GUI.blit_screen + y * GUI.blit_screen_pitch);
-			uint32	*d = (uint32 *) (GUI.image->data + y * GUI.image->bytes_per_line);
+			uint16 *s = (uint16 *)(GUI.blit_screen + y * GUI.blit_screen_pitch);
+			uint32 *d = (uint32 *)(GUI.image->data + y * GUI.image->bytes_per_line);
 
 			for (int x = 0; x < width; x++)
 			{
-				uint32	pixel = *s++;
+				uint32 pixel = *s++;
 				*d++ = (((pixel >> 10) & 0x1f) << (GUI.red_shift + 3)) | (((pixel >> 5) & 0x1f) << (GUI.green_shift + 3)) | ((pixel & 0x1f) << (GUI.blue_shift + 3));
 			}
 		}
 	}
 }
 
-static void Convert16To24Packed (int width, int height) {}
+static void Convert16To24Packed(int width, int height){}
 {
 	if (GUI.pixel_format == 565)
 	{
 		for (int y = 0; y < height; y++)
 		{
-			uint16	*s = (uint16 *) (GUI.blit_screen + y * GUI.blit_screen_pitch);
-			uint8	*d = (uint8 *)  (GUI.image->data + y * GUI.image->bytes_per_line);
+			uint16 *s = (uint16 *)(GUI.blit_screen + y * GUI.blit_screen_pitch);
+			uint8 *d = (uint8 *)(GUI.image->data + y * GUI.image->bytes_per_line);
 
-		#ifdef LSB_FIRST
+#ifdef LSB_FIRST
 			if (GUI.red_shift < GUI.blue_shift)
-		#else
+#else
 			if (GUI.red_shift > GUI.blue_shift)
-		#endif
+#endif
 			{
 				for (int x = 0; x < width; x++)
 				{
-					uint32	pixel = *s++;
+					uint32 pixel = *s++;
 					*d++ = (pixel >> (11 - 3)) & 0xf8;
-					*d++ = (pixel >>  (6 - 3)) & 0xf8;
+					*d++ = (pixel >> (6 - 3)) & 0xf8;
 					*d++ = (pixel & 0x1f) << 3;
 				}
 			}
@@ -445,9 +449,9 @@ static void Convert16To24Packed (int width, int height) {}
 			{
 				for (int x = 0; x < width; x++)
 				{
-					uint32	pixel = *s++;
+					uint32 pixel = *s++;
 					*d++ = (pixel & 0x1f) << 3;
-					*d++ = (pixel >>  (6 - 3)) & 0xf8;
+					*d++ = (pixel >> (6 - 3)) & 0xf8;
 					*d++ = (pixel >> (11 - 3)) & 0xf8;
 				}
 			}
@@ -457,20 +461,20 @@ static void Convert16To24Packed (int width, int height) {}
 	{
 		for (int y = 0; y < height; y++)
 		{
-			uint16	*s = (uint16 *) (GUI.blit_screen + y * GUI.blit_screen_pitch);
-			uint8	*d = (uint8 *)  (GUI.image->data + y * GUI.image->bytes_per_line);
+			uint16 *s = (uint16 *)(GUI.blit_screen + y * GUI.blit_screen_pitch);
+			uint8 *d = (uint8 *)(GUI.image->data + y * GUI.image->bytes_per_line);
 
-		#ifdef LSB_FIRST
+#ifdef LSB_FIRST
 			if (GUI.red_shift < GUI.blue_shift)
-		#else
+#else
 			if (GUI.red_shift > GUI.blue_shift)
-		#endif
+#endif
 			{
 				for (int x = 0; x < width; x++)
 				{
-					uint32	pixel = *s++;
+					uint32 pixel = *s++;
 					*d++ = (pixel >> (10 - 3)) & 0xf8;
-					*d++ = (pixel >>  (5 - 3)) & 0xf8;
+					*d++ = (pixel >> (5 - 3)) & 0xf8;
 					*d++ = (pixel & 0x1f) << 3;
 				}
 			}
@@ -478,9 +482,9 @@ static void Convert16To24Packed (int width, int height) {}
 			{
 				for (int x = 0; x < width; x++)
 				{
-					uint32	pixel = *s++;
+					uint32 pixel = *s++;
 					*d++ = (pixel & 0x1f) << 3;
-					*d++ = (pixel >>  (5 - 3)) & 0xf8;
+					*d++ = (pixel >> (5 - 3)) & 0xf8;
 					*d++ = (pixel >> (10 - 3)) & 0xf8;
 				}
 			}
@@ -488,37 +492,31 @@ static void Convert16To24Packed (int width, int height) {}
 	}
 }
 
-void S9xTextMode (void) {}
-{
-	SetXRepeat(TRUE);
-}
+void S9xTextMode(void) {}
 
-void S9xGraphicsMode (void) {}
-{
-	SetXRepeat(FALSE);
-}
+void S9xGraphicsMode(void) {}
 
-void S9xLatchJSEvent ()
+void S9xLatchJSEvent()
 {
 	// record that a JS event happened and was reported to the engine
 	GUI.js_event_latch = TRUE;
 }
 
-void S9xProcessEvents (bool8 block){}
+void S9xProcessEvents(bool8 block) {}
 
-const char * S9xSelectFilename (const char *def, const char *dir1, const char *ext1, const char *title)
+const char *S9xSelectFilename(const char *def, const char *dir1, const char *ext1, const char *title)
 {
-	static char	s[PATH_MAX + 1];
-	char		buffer[PATH_MAX + 1];
+	static char s[PATH_MAX + 1];
+	char buffer[PATH_MAX + 1];
 
 	printf("\n%s (default: %s): ", title, def);
 	fflush(stdout);
 
 	if (fgets(buffer, PATH_MAX + 1, stdin))
 	{
-		char	drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], fname[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
+		char drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], fname[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
 
-		char	*p = buffer;
+		char *p = buffer;
 		while (isspace(*p))
 			p++;
 		if (!*p)
@@ -528,7 +526,7 @@ const char * S9xSelectFilename (const char *def, const char *dir1, const char *e
 			p = buffer;
 		}
 
-		char	*q = strrchr(p, '\n');
+		char *q = strrchr(p, '\n');
 		if (q)
 			*q = 0;
 
@@ -541,10 +539,10 @@ const char * S9xSelectFilename (const char *def, const char *dir1, const char *e
 	return (NULL);
 }
 
-void S9xMessage (int type, int number, const char *message)
+void S9xMessage(int type, int number, const char *message)
 {
-	const int	max = 36 * 3;
-	static char	buffer[max + 1];
+	const int max = 36 * 3;
+	static char buffer[max + 1];
 
 	fprintf(stdout, "%s\n", message);
 	strncpy(buffer, message, max + 1);
@@ -552,9 +550,9 @@ void S9xMessage (int type, int number, const char *message)
 	S9xSetInfoString(buffer);
 }
 
-const char * S9xStringInput (const char *message)
+const char *S9xStringInput(const char *message)
 {
-	static char	buffer[256];
+	static char buffer[256];
 
 	printf("%s: ", message);
 	fflush(stdout);
@@ -565,59 +563,59 @@ const char * S9xStringInput (const char *message)
 	return (NULL);
 }
 
-void S9xSetTitle (const char *string)
+void S9xSetTitle(const char *string)
 {
 	// TODO: Replace with something
 	// XStoreName(GUI.display, GUI.window, string);
 	// XFlush(GUI.display);
 }
 
-s9xcommand_t S9xGetDisplayCommandT (const char *n)
+s9xcommand_t S9xGetDisplayCommandT(const char *n)
 {
-	s9xcommand_t	cmd;
+	s9xcommand_t cmd;
 
-	cmd.type         = S9xBadMapping;
-	cmd.multi_press  = 0;
+	cmd.type = S9xBadMapping;
+	cmd.multi_press = 0;
 	cmd.button_norpt = 0;
-	cmd.port[0]      = 0xff;
-	cmd.port[1]      = 0;
-	cmd.port[2]      = 0;
-	cmd.port[3]      = 0;
+	cmd.port[0] = 0xff;
+	cmd.port[1] = 0;
+	cmd.port[2] = 0;
+	cmd.port[3] = 0;
 
 	return (cmd);
 }
 
-char * S9xGetDisplayCommandName (s9xcommand_t cmd)
+char *S9xGetDisplayCommandName(s9xcommand_t cmd)
 {
 	return (strdup("None"));
 }
 
-void S9xHandleDisplayCommand (s9xcommand_t cmd, int16 data1, int16 data2)
+void S9xHandleDisplayCommand(s9xcommand_t cmd, int16 data1, int16 data2)
 {
 	return;
 }
 
-bool8 S9xMapDisplayInput (const char *n, s9xcommand_t *cmd)
+bool8 S9xMapDisplayInput(const char *n, s9xcommand_t *cmd)
 {
 	return (false);
 }
 
-bool S9xDisplayPollButton (uint32 id, bool *pressed)
+bool S9xDisplayPollButton(uint32 id, bool *pressed)
 {
 	return (false);
 }
 
-bool S9xDisplayPollAxis (uint32 id, int16 *value)
+bool S9xDisplayPollAxis(uint32 id, int16 *value)
 {
 	return (false);
 }
 
-bool S9xDisplayPollPointer (uint32 id, int16 *x, int16 *y)
+bool S9xDisplayPollPointer(uint32 id, int16 *x, int16 *y)
 {
 	if ((id & 0xc0008000) != 0x40008000)
 		return (false);
 
-	int	d = (id >> 24) & 0x3f,
+	int d = (id >> 24) & 0x3f,
 		n = id & 0x7fff;
 
 	if (d != 0 || n != 0)
