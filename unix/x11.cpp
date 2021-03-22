@@ -66,7 +66,6 @@ typedef void (*Blitter)(uint8 *, int, uint8 *, int, int, int);
 static void SetupImage(void);
 static void TakedownImage(void);
 static void SetupXImage(void);
-static void Repaint(bool8);
 static void Convert16To24(int, int);
 static void Convert16To24Packed(int, int);
 
