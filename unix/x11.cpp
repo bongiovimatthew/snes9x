@@ -310,24 +310,25 @@ static void SetupXImage(void)
 	// TODO: Replace with image creation not using X11
 	// GUI.image->ximage = XCreateImage(GUI.display, GUI.visual, GUI.depth, ZPixmap, 0, NULL, SNES_WIDTH * 2, SNES_HEIGHT_EXTENDED * 2, BitmapUnit(GUI.display), 0);
 	// set main Image struct vars
-	GUI.image->height = GUI.image->ximage->height;
-	GUI.image->bytes_per_line = GUI.image->ximage->bytes_per_line;
-	GUI.image->data_size = GUI.image->bytes_per_line * GUI.image->height;
+	
+	// GUI.image->height = GUI.image->ximage->height;
+	// GUI.image->bytes_per_line = GUI.image->ximage->bytes_per_line;
+	// GUI.image->data_size = GUI.image->bytes_per_line * GUI.image->height;
 
-	GUI.image->ximage->data = (char *)malloc(GUI.image->data_size);
-	if (!GUI.image->ximage || !GUI.image->ximage->data)
-		FatalError("XCreateImage failed.");
-	printf("Created XImage, size %d\n", GUI.image->data_size);
+// 	GUI.image->ximage->data = (char *)malloc(GUI.image->data_size);
+// 	if (!GUI.image->ximage || !GUI.image->ximage->data)
+// 		FatalError("XCreateImage failed.");
+// 	printf("Created XImage, size %d\n", GUI.image->data_size);
 
-	// Set final values
-	GUI.image->bits_per_pixel = GUI.image->ximage->bits_per_pixel;
-	GUI.image->data = GUI.image->ximage->data;
+// 	// Set final values
+// 	GUI.image->bits_per_pixel = GUI.image->ximage->bits_per_pixel;
+// 	GUI.image->data = GUI.image->ximage->data;
 
-#ifdef LSB_FIRST
-	GUI.image->ximage->byte_order = LSBFirst;
-#else
-	GUI.image->ximage->byte_order = MSBFirst;
-#endif
+// #ifdef LSB_FIRST
+// 	GUI.image->ximage->byte_order = LSBFirst;
+// #else
+// 	GUI.image->ximage->byte_order = MSBFirst;
+// #endif
 }
 
 void S9xPutImage(int width, int height)
@@ -389,7 +390,7 @@ void S9xPutImage(int width, int height)
 	prevHeight = height;
 }
 
-static void Convert16To24(int width, int height){}
+static void Convert16To24(int width, int height)
 {
 	if (GUI.pixel_format == 565)
 	{
@@ -421,7 +422,7 @@ static void Convert16To24(int width, int height){}
 	}
 }
 
-static void Convert16To24Packed(int width, int height){}
+static void Convert16To24Packed(int width, int height)
 {
 	if (GUI.pixel_format == 565)
 	{
