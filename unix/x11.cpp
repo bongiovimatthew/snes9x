@@ -498,7 +498,7 @@ void S9xGraphicsMode(void) {}
 void S9xLatchJSEvent()
 {
 	// record that a JS event happened and was reported to the engine
-	GUI.js_event_latch = TRUE;
+	// GUI.js_event_latch = TRUE;
 }
 
 void S9xProcessEvents(bool8 block) {}
