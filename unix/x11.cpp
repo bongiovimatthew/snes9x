@@ -333,7 +333,6 @@ static void SetupXImage(void)
 
 void S9xPutImage(int width, int height)
 {
-	static int prevWidth = 0, prevHeight = 0;
 	int copyWidth, copyHeight;
 	Blitter blitFn = NULL;
 
@@ -385,9 +384,6 @@ void S9xPutImage(int width, int height)
 
 	// TODO: Replace with some kind of image flushing logic
 	//Repaint(TRUE);
-
-	prevWidth = width;
-	prevHeight = height;
 }
 
 static void Convert16To24(int width, int height)
