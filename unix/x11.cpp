@@ -434,7 +434,7 @@ s9xcommand_t S9xGetDisplayCommandT(const char *n)
 {
 	s9xcommand_t cmd;
 
-	// cmd.type = S9xBadMapping;
+	cmd.type = S9xBadMapping;
 	// cmd.multi_press = 0;
 	// cmd.button_norpt = 0;
 	// cmd.port[0] = 0xff;
