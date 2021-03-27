@@ -1238,5 +1238,5 @@ int main (int argc, char **argv)
 
 static void LogSpecialMemory (void)
 {
-	Memory.SaveLTBBMemory("data_output.txt");
+	// Memory.SaveLTBBMemory("data_output.txt");
 }
