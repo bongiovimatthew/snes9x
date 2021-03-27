@@ -820,7 +820,7 @@ struct GameData
 	uint32 team1Score;
 	uint32 team2Score;
 
-	PlayerData[4] players;
+	PlayerData[] players;
 };
 
 // deinterleave
