@@ -15,28 +15,11 @@
 #include <errno.h>
 #include <string.h>
 #include <algorithm>
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#ifdef USE_THREADS
-#include <sched.h>
-#include <pthread.h>
-#include <vector>
-#endif
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#ifdef HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
-#endif
-#ifndef NOSOUND
 #include <sys/soundcard.h>
 #include <sys/mman.h>
-#endif
-#ifdef JOYSTICK_SUPPORT
-#include <linux/joystick.h>
-#endif
-
 #include "snes9x.h"
 #include "memmap.h"
 #include "apu/apu.h"
@@ -48,19 +31,9 @@
 #include "logger.h"
 #include "display.h"
 #include "conffile.h"
-#ifdef NETPLAY_SUPPORT
-#include "netplay.h"
-#endif
-#ifdef DEBUGGER
-#include "debug.h"
-#endif
 #include "statemanager.h"
 
-#ifdef NETPLAY_SUPPORT
-#ifdef _DEBUG
-#define NP_DEBUG 2
-#endif
-#endif
+using namespace std;
 
 typedef std::pair<std::string, std::string>	strpair_t;
 
@@ -127,18 +100,6 @@ static SoundStatus		so;
 
 static bool8	rewinding;
 
-#ifdef JOYSTICK_SUPPORT
-static uint8		js_mod[8]     = { 0, 0, 0, 0, 0, 0, 0, 0 };
-static int			js_fd[8]      = { -1, -1, -1, -1, -1, -1, -1, -1 };
-static const char	*js_device[8] = { "/dev/js0", "/dev/js1", "/dev/js2", "/dev/js3", "/dev/js4", "/dev/js5", "/dev/js6", "/dev/js7" };
-static bool8		js_unplugged[8] = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };
-#endif
-
-#ifdef NETPLAY_SUPPORT
-static uint32	joypads[8];
-static uint32	old_joypads[8];
-#endif
-
 bool8 S9xMapDisplayInput (const char *, s9xcommand_t *);
 s9xcommand_t S9xGetDisplayCommandT (const char *);
 char * S9xGetDisplayCommandName (s9xcommand_t);
@@ -150,11 +111,6 @@ bool S9xDisplayPollPointer (uint32, int16 *, int16 *);
 static void LogSpecialMemory (void);
 static void NSRTControllerSetup (void);
 static int make_snes9x_dirs (void);
-#ifdef JOYSTICK_SUPPORT
-static void InitJoysticks (void);
-static bool8 ReadJoysticks (void);
-void S9xLatchJSEvent();
-#endif
 
 static long log2 (long num)
 {
