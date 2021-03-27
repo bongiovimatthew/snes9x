@@ -4,8 +4,6 @@
    For further information, consult the LICENSE file in the root directory.
 \*****************************************************************************/
 
-#include <iostream>
-#include <fstream>
 #include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
@@ -32,8 +30,6 @@
 #include "display.h"
 #include "conffile.h"
 #include "statemanager.h"
-
-using namespace std;
 
 typedef std::pair<std::string, std::string>	strpair_t;
 
