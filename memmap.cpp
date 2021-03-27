@@ -2017,9 +2017,9 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 	uint32 PLAYER_POINTS = 0x10A7;
 	
 	uint32 P1_OFFSET = 0;
-	uint32 P2_OFFSET = 1;
-	uint32 P3_OFFSET = 2;
-	uint32 P4_OFFSET = 3;
+	uint32 P2_OFFSET = 2;
+	uint32 P3_OFFSET = 4;
+	uint32 P4_OFFSET = 6;
 
 	// uint8 byte = S9xDebugGetByte(Address);
 	printf("Team 1 Score: %u\n", S9xDebugGetByte(TEAM_1_SCORE));
