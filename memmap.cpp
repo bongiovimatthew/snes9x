@@ -2015,8 +2015,7 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 		// 0x7E0D43 - Team 1 score 
 		uint32 Address = 0x7E0D43;
 		uint8 byte = S9xDebugGetByte(Address);
-		printf("Testing");
-		printf(byte);
+		printf("byte: %u", byte);
 		// if (!fwrite((char *) byte, size, 1, file))
 		// 	printf ("Couldn't write to SRAM file.\n");
 		// fclose(file);
