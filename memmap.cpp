@@ -2004,6 +2004,24 @@ bool8 CMemory::LoadSRAM (const char *filename)
 	return (TRUE);
 }
 
+bool8 CMemory::SaveLTBBMemory (const char *filename)
+{
+	FILE	*file;
+	int		size = 1;
+	
+	file = fopen(filename, "wb");
+	if (file)
+	{
+		// 0x7E0D43 - Team 1 score 
+		if (!fwrite((char *) Memory.SRAM[0x7E0D43], size, 1, file))
+			printf ("Couldn't write to SRAM file.\n");
+		fclose(file);
+		return (TRUE);
+	}
+
+	return (FALSE);
+}
+
 bool8 CMemory::SaveSRAM (const char *filename)
 {
 	if (Settings.SuperFX && ROMType < 0x15) // doesn't have SRAM

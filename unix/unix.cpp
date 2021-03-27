@@ -1242,8 +1242,5 @@ int main (int argc, char **argv)
 
 static void LogSpecialMemory (void)
 {
-	ofstream myfile;
-  	myfile.open ("memory_test.txt");
-  	myfile << "Writing this to a file.\n";
-  	myfile.close();
+	Memory.SaveLTBBMemory("data_output.txt");
 }

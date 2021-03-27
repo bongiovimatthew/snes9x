@@ -115,6 +115,7 @@ struct CMemory
 	bool8	LoadGNEXT ();
 	bool8	LoadSRAM (const char *);
 	bool8	SaveSRAM (const char *);
+	bool8   SaveLTBBMemory (const char *);
 	void	ClearSRAM (bool8 onlyNonSavedSRAM = 0);
 	bool8	LoadSRTC (void);
 	bool8	SaveSRTC (void);
