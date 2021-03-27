@@ -787,24 +787,6 @@ static int unzFindExtension (unzFile &, const char *, bool restart = TRUE, bool 
 
 static const uint32 playerOffsets[4] = {0, 2, 4, 6};
 
-struct GameData
-{
-	uint32 secsLeftInQuarter;
-	uint32 shotClockSecs;
-	uint32 quarter;
-
-	uint32 team1Score;
-	uint32 team2Score;
-
-	PlayerData[4] players;
-};
-
-struct PlayerData 
-{
-	Position position;
-	PlayerStats stats;
-};
-
 struct PlayerStats
 {
 	uint32 shotsMade;
@@ -823,6 +805,23 @@ struct Position
 	uint32 z;
 };
 
+struct PlayerData 
+{
+	Position position;
+	PlayerStats stats;
+};
+
+struct GameData
+{
+	uint32 secsLeftInQuarter;
+	uint32 shotClockSecs;
+	uint32 quarter;
+
+	uint32 team1Score;
+	uint32 team2Score;
+
+	PlayerData[4] players;
+};
 
 // deinterleave
 
