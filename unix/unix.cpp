@@ -124,7 +124,6 @@ static long log2 (long num)
 
 namespace {
 
-#if ! defined(NOSOUND)
 	class S9xAudioOutput
 	{
 	public:
@@ -134,63 +133,14 @@ namespace {
 			uint32 bufferSizeMS = unixSettings.SoundBufferSize; // milliseconds
 			// 4 = sizeof(uint16) * STEREO
 			m_BufferSize = int(uint64(sampleRateHz) * bufferSizeMS / 1000 * 4);
-
-#if defined(USE_THREADS)
-			m_WrittenSize = 0;
-			m_Thread = pthread_t();
-			m_isExit = false;
-			if (isThreaded)
-			{
-				m_BufferMutex = PTHREAD_MUTEX_INITIALIZER;
-				m_hasBuffer = PTHREAD_COND_INITIALIZER;
-				if (pthread_create(&m_Thread, NULL, AudioOutputThreadEntry, this))
-				{
-					return;
-				}
-			}
-#endif
 		}
 
 		~S9xAudioOutput()
 		{
-#if defined(USE_THREADS)
-			if (m_Thread)
-			{
-				pthread_mutex_lock(&m_BufferMutex);
-				{
-					m_isExit = true;
-					pthread_cond_signal(&m_hasBuffer);
-				}
-				pthread_mutex_unlock(&m_BufferMutex);
-
-				pthread_join(m_Thread, NULL);
-				pthread_mutex_destroy(&m_BufferMutex);
-				pthread_cond_destroy(&m_hasBuffer);
-			}
-#endif
 		}
 
 		void Write(void* data, int size)
 		{
-#if defined(USE_THREADS)
-			if (m_Thread)
-			{
-				pthread_mutex_lock(&m_BufferMutex);
-				{
-					if (int(m_Buffering.size()) < m_BufferSize)
-					{
-						size_t oldSize = m_Buffering.size();
-						size_t newSize = oldSize + size;
-						m_WrittenSize = newSize;
-						m_Buffering.resize(newSize);
-						memcpy(&m_Buffering[oldSize], data, size);
-						pthread_cond_signal(&m_hasBuffer);
-					}
-				}
-				pthread_mutex_unlock(&m_BufferMutex);
-			}
-			else
-#endif
 			{
 				WriteImpl(data, size);
 			}
@@ -198,19 +148,6 @@ namespace {
 
 		int GetFreeBufferSize()
 		{
-#if defined(USE_THREADS)
-			if (m_Thread)
-			{
-				int writtenSize;
-				pthread_mutex_lock(&m_BufferMutex);
-				{
-					writtenSize = m_WrittenSize;
-				}
-				pthread_mutex_unlock(&m_BufferMutex);
-				return m_BufferSize - writtenSize;
-			}
-			else
-#endif
 			{
 				audio_buf_info info;
 				ioctl(m_FD, SNDCTL_DSP_GETOSPACE, &info);
@@ -237,47 +174,6 @@ namespace {
 
 		int m_FD;
 		int m_BufferSize;
-
-#if defined(USE_THREADS)
-		pthread_t m_Thread;
-		volatile bool m_isExit;
-		pthread_mutex_t m_BufferMutex;
-		pthread_cond_t m_hasBuffer;
-		std::vector<uint8> m_PlayingBuffer;
-		std::vector<uint8> m_Buffering;
-		int m_WrittenSize; // for dynamic rate control
-
-		static void* AudioOutputThreadEntry(void* arg)
-		{
-			S9xAudioOutput* obj = reinterpret_cast<S9xAudioOutput*>(arg);
-			obj->AudioOutputThread();
-			return NULL;
-		}
-
-		void AudioOutputThread()
-		{
-			while (true)
-			{
-				pthread_mutex_lock(&m_BufferMutex);
-				{
-					pthread_cond_wait(&m_hasBuffer, &m_BufferMutex);
-					if (m_isExit)
-					{
-						return;
-					}
-					m_PlayingBuffer.swap(m_Buffering);
-					m_WrittenSize = 0;
-				}
-				pthread_mutex_unlock(&m_BufferMutex);
-
-				if (! m_PlayingBuffer.empty())
-				{
-					WriteImpl(&m_PlayingBuffer[0], m_PlayingBuffer.size());
-					m_PlayingBuffer.resize(0);
-				}
-			}
-		}
-#endif // USE_THREADS
 	};
 
 	S9xAudioOutput* s_AudioOutput = NULL;
@@ -294,18 +190,6 @@ void S9xExtraUsage (void)
 	S9xMessage(S9X_INFO, S9X_USAGE, "-cartb <filename>               ROM in slot B (use with -multi)");
 	S9xMessage(S9X_INFO, S9X_USAGE, "");
 
-#ifdef JOYSTICK_SUPPORT
-	S9xMessage(S9X_INFO, S9X_USAGE, "-nogamepad                      Disable gamepad reading");
-	S9xMessage(S9X_INFO, S9X_USAGE, "-paddev1 <string>               Specify gamepad device 1");
-	S9xMessage(S9X_INFO, S9X_USAGE, "-paddev1 <string>               Specify gamepad device 2");
-	S9xMessage(S9X_INFO, S9X_USAGE, "-paddev1 <string>               Specify gamepad device 3");
-	S9xMessage(S9X_INFO, S9X_USAGE, "-paddev1 <string>               Specify gamepad device 4");
-	S9xMessage(S9X_INFO, S9X_USAGE, "");
-#endif
-
-#ifdef USE_THREADS
-	S9xMessage(S9X_INFO, S9X_USAGE, "-threadsound                    Use a separate thread to output sound");
-#endif
 	S9xMessage(S9X_INFO, S9X_USAGE, "-buffersize                     Sound generating buffer size in millisecond");
 	S9xMessage(S9X_INFO, S9X_USAGE, "-fragmentsize                   Sound playback buffer fragment size in bytes");
 	S9xMessage(S9X_INFO, S9X_USAGE, "-sounddev <string>              Specify sound device");
@@ -347,27 +231,6 @@ void S9xParseArg (char **argv, int &i, int argc)
 			S9xUsage();
 	}
 	else
-#ifdef JOYSTICK_SUPPORT
-	if (!strcasecmp(argv[i], "-nogamepad"))
-		unixSettings.JoystickEnabled = FALSE;
-	else
-	if (!strncasecmp(argv[i], "-paddev", 7) &&
-		argv[i][7] >= '1' && argv[i][7] <= '8' && argv[i][8] == '\0')
-	{
-		int	j = argv[i][7] - '1';
-
-		if (i + 1 < argc)
-			js_device[j] = argv[++i];
-		else
-			S9xUsage();
-	}
-	else
-#endif
-#ifdef USE_THREADS
-	if (!strcasecmp(argv[i], "-threadsound"))
-		unixSettings.ThreadSound = TRUE;
-	else
-#endif
 	if (!strcasecmp(argv[i], "-buffersize"))
 	{
 		if (i + 1 < argc)
@@ -525,22 +388,6 @@ void S9xParsePortConfig (ConfigFile &conf, int pass)
 	snapshot_filename              = conf.GetStringDup("Unix::SnapshotFilename",    NULL);
 	play_smv_filename              = conf.GetStringDup("Unix::PlayMovieFilename",   NULL);
 	record_smv_filename            = conf.GetStringDup("Unix::RecordMovieFilename", NULL);
-
-#ifdef JOYSTICK_SUPPORT
-	unixSettings.JoystickEnabled   = conf.GetBool     ("Unix::EnableGamePad",       true);
-	js_device[0]                   = conf.GetStringDup("Unix::PadDevice1",          NULL);
-	js_device[1]                   = conf.GetStringDup("Unix::PadDevice2",          NULL);
-	js_device[2]                   = conf.GetStringDup("Unix::PadDevice3",          NULL);
-	js_device[3]                   = conf.GetStringDup("Unix::PadDevice4",          NULL);
-	js_device[4]                   = conf.GetStringDup("Unix::PadDevice5",          NULL);
-	js_device[5]                   = conf.GetStringDup("Unix::PadDevice6",          NULL);
-	js_device[6]                   = conf.GetStringDup("Unix::PadDevice7",          NULL);
-	js_device[7]                   = conf.GetStringDup("Unix::PadDevice8",          NULL);
-#endif
-
-#ifdef USE_THREADS
-	unixSettings.ThreadSound       = conf.GetBool     ("Unix::ThreadSound",         false);
-#endif
 	unixSettings.SoundBufferSize   = conf.GetUInt     ("Unix::SoundBufferSize",     100);
 	unixSettings.SoundFragmentSize = conf.GetUInt     ("Unix::SoundFragmentSize",   2048);
 	sound_device                   = conf.GetStringDup("Unix::SoundDevice",         "/dev/dsp");
@@ -757,67 +604,13 @@ void S9xAutoSaveSRAM (void)
 
 void S9xSyncSpeed (void)
 {
-#ifndef NOSOUND
 	if (Settings.SoundSync)
 	{
 		return;
 	}
-#endif
 
 	if (Settings.DumpStreams)
 		return;
-
-#ifdef NETPLAY_SUPPORT
-	if (Settings.NetPlay && NetPlay.Connected)
-	{
-	#if defined(NP_DEBUG) && NP_DEBUG == 2
-		printf("CLIENT: SyncSpeed @%d\n", S9xGetMilliTime());
-	#endif
-
-		S9xNPSendJoypadUpdate(old_joypads[0]);
-		for (int J = 0; J < 8; J++)
-			joypads[J] = S9xNPGetJoypad(J);
-
-		if (!S9xNPCheckForHeartBeat())
-		{
-			NetPlay.PendingWait4Sync = !S9xNPWaitForHeartBeatDelay(100);
-		#if defined(NP_DEBUG) && NP_DEBUG == 2
-			if (NetPlay.PendingWait4Sync)
-				printf("CLIENT: PendingWait4Sync1 @%d\n", S9xGetMilliTime());
-		#endif
-
-			IPPU.RenderThisFrame = TRUE;
-			IPPU.SkippedFrames = 0;
-		}
-		else
-		{
-			NetPlay.PendingWait4Sync = !S9xNPWaitForHeartBeatDelay(200);
-		#if defined(NP_DEBUG) && NP_DEBUG == 2
-			if (NetPlay.PendingWait4Sync)
-				printf("CLIENT: PendingWait4Sync2 @%d\n", S9xGetMilliTime());
-		#endif
-
-			if (IPPU.SkippedFrames < NetPlay.MaxFrameSkip)
-			{
-				IPPU.RenderThisFrame = FALSE;
-				IPPU.SkippedFrames++;
-			}
-			else
-			{
-				IPPU.RenderThisFrame = TRUE;
-				IPPU.SkippedFrames = 0;
-			}
-		}
-
-		if (!NetPlay.PendingWait4Sync)
-		{
-			NetPlay.FrameCount++;
-			S9xNPStepJoypadHistory();
-		}
-
-		return;
-	}
-#endif
 
 	if (Settings.HighSpeedSeek > 0)
 		Settings.HighSpeedSeek--;
@@ -1067,46 +860,6 @@ char * S9xGetPortCommandName (s9xcommand_t cmd)
 
 void S9xHandlePortCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 {
-#ifdef JOYSTICK_SUPPORT
-	switch (cmd.type)
-	{
-		case S9xButtonPort:
-			if (cmd.port[0] != 0)
-				break;
-
-			switch (cmd.port[1])
-			{
-				case 0:
-					if (data1)
-						js_mod[cmd.port[2]] |=  cmd.port[3];
-					else
-						js_mod[cmd.port[2]] &= ~cmd.port[3];
-					break;
-
-				case 1:
-					if (data1)
-						js_mod[cmd.port[2]] ^=  cmd.port[3];
-					break;
-
-				case 2:
-					rewinding = (bool8) data1;
-					break;
-
-                                case 3:
-                                        frame_advance = (bool8) data1;
-			}
-
-			break;
-
-		case S9xAxisPort:
-			break;
-
-		case S9xPointerPort:
-			break;
-	}
-
-	S9xHandleDisplayCommand(cmd, data1, data2);
-#endif
 }
 
 void S9xSetupDefaultKeymap (void)
@@ -1145,147 +898,11 @@ void S9xSetupDefaultKeymap (void)
 
 void S9xInitInputDevices (void)
 {
-#ifdef JOYSTICK_SUPPORT
-	InitJoysticks();
-#endif
 }
 
-#ifdef JOYSTICK_SUPPORT
-
-static void InitJoysticks (void)
-{
-#ifdef JSIOCGVERSION
-	int				version;
-	unsigned char	axes, buttons;
-
-	if ((js_fd[0] = open(js_device[0], O_RDONLY | O_NONBLOCK)) == -1)
-	{
-		fprintf(stderr, "joystick: No joystick found.\n");
-		return;
-	}
-
-	if (ioctl(js_fd[0], JSIOCGVERSION, &version) == -1)
-	{
-		fprintf(stderr, "joystick: You need at least driver version 1.0 for joystick support.\n");
-		close(js_fd[0]);
-		return;
-	}
-
-	for (int i = 1; i < 8; i++)
-		js_fd[i] = open(js_device[i], O_RDONLY | O_NONBLOCK);
-
-#ifdef JSIOCGNAME
-	char	name[130];
-
-	bzero(name, 128);
-
-	if (ioctl(js_fd[0], JSIOCGNAME(128), name) > 0)
-	{
-		printf("Using %s (%s) as joystick1\n", name, js_device[0]);
-
-		for (int i = 1; i < 8; i++)
-		{
-			if (js_fd[i] > 0)
-			{
-				ioctl(js_fd[i], JSIOCGNAME(128), name);
-				printf ("  and %s (%s) as joystick%d\n", name, js_device[i], i + 1);
-			}
-		}
-	}
-	else
-#endif
-	{
-		ioctl(js_fd[0], JSIOCGAXES, &axes);
-		ioctl(js_fd[0], JSIOCGBUTTONS, &buttons);
-		printf("Using %d-axis %d-button joystick (%s) as joystick1\n", axes, buttons, js_device[0]);
-
-		for (int i = 1; i < 8; i++)
-		{
-			if (js_fd[i] > 0)
-			{
-				ioctl(js_fd[i], JSIOCGAXES, &axes);
-				ioctl(js_fd[i], JSIOCGBUTTONS, &buttons);
-				printf("  and %d-axis %d-button joystick (%s) as joystick%d\n", axes, buttons, js_device[i], i + 1);
-			}
-		}
-	}
-#endif
-}
-
-static bool8 ReadJoysticks (void)
-{
-	// track if ANY joystick event happened this frame
-	int js_latch = FALSE;
-#ifdef JSIOCGVERSION
-	struct js_event	js_ev;
-
-	for (int i = 0; i < 8; i++)
-	{
-		// Try to reopen unplugged sticks
-		if (js_unplugged[i])
-		{
-			js_fd[i] = open(js_device[i], O_RDONLY | O_NONBLOCK);
-			if (js_fd[i] >= 0)
-			{
-				fprintf(stderr,"Joystick %d reconnected.\n",i);
-				js_unplugged[i] = FALSE;
-				js_latch = TRUE;
-			}
-		}
-
-		// skip sticks without valid file desc
-		if (js_fd[i] < 0) continue;
-
-		while (read(js_fd[i], &js_ev, sizeof(struct js_event)) == sizeof(struct js_event))
-		{
-			switch (js_ev.type)
-			{
-				case JS_EVENT_AXIS:
-					S9xReportAxis(0x8000c000 | (i << 24) | js_ev.number, js_ev.value);
-					S9xReportAxis(0x80008000 | (i << 24) | (js_mod[i] << 16) | js_ev.number, js_ev.value);
-					js_latch = TRUE;
-					break;
-
-				case JS_EVENT_BUTTON:
-				case JS_EVENT_BUTTON | JS_EVENT_INIT:
-					S9xReportButton(0x80004000 | (i << 24) | js_ev.number, js_ev.value);
-					S9xReportButton(0x80000000 | (i << 24) | (js_mod[i] << 16) | js_ev.number, js_ev.value);
-					js_latch = TRUE;
-					break;
-			}
-		}
-
-		/* EAGAIN is returned when the queue is empty */
-		if (errno != EAGAIN) {
-			// Error reading joystick.
-			fprintf(stderr,"Error reading joystick %d!\n",i);
-
-			// Mark for reconnect attempt.
-			js_unplugged[i] = TRUE;
-
-			for (unsigned int j = 0; j < 16; j++)
-			{
-				// Center all axis
-				S9xReportAxis(0x8000c000 | (i << 24) | j, 0);
-				S9xReportAxis(0x80008000 | (i << 24) | (js_mod[i] << 16) | j, 0);
-				// Unpress all buttons.
-				S9xReportButton(0x80004000 | (i << 24) | j, 0);
-				S9xReportButton(0x80000000 | (i << 24) | (js_mod[i] << 16) | j, 0);
-			}
-
-			js_latch = TRUE;
-		}
-	}
-#endif
-	return js_latch;
-}
-
-#endif
 
 void S9xSamplesAvailable(void *data)
 {
-#ifndef NOSOUND
-
     int samples_to_write;
 	static uint8 *sound_buffer = NULL;
 	static int sound_buffer_size = 0;
@@ -1309,12 +926,11 @@ void S9xSamplesAvailable(void *data)
     S9xMixSamples(sound_buffer, samples_to_write);
 
     s_AudioOutput->Write(sound_buffer, samples_to_write * 2);
-#endif
+
 }
 
 bool8 S9xOpenSoundDevice (void)
 {
-#ifndef NOSOUND
 	int	J, K;
 
 	so.sound_fd = open(sound_device, O_WRONLY | O_NONBLOCK);
@@ -1352,7 +968,6 @@ bool8 S9xOpenSoundDevice (void)
 
 	so.fragment_size = J;
 	printf("fragment size: %d\n", J);
-#endif
 
 	S9xSetSamplesAvailableCallback(S9xSamplesAvailable, NULL);
 
@@ -1367,14 +982,7 @@ void S9xExit (void)
 	S9xSetSoundMute(TRUE);
 	Settings.StopEmulation = TRUE;
 
-#ifdef NETPLAY_SUPPORT
-	if (Settings.NetPlay)
-		S9xNPDisconnect();
-#endif
-
-#ifndef NOSOUND
 	delete s_AudioOutput;
-#endif
 
 	Memory.SaveSRAM(S9xGetFilename(".srm", SRAM_DIR));
 	S9xResetSaveTimer(FALSE);
@@ -1386,14 +994,6 @@ void S9xExit (void)
 
 	exit(0);
 }
-
-#ifdef DEBUGGER
-static void sigbrkhandler (int)
-{
-	CPU.Flags |= DEBUG_MODE_FLAG;
-	signal(SIGINT, (SIG_PF) sigbrkhandler);
-}
-#endif
 
 int main (int argc, char **argv)
 {
@@ -1431,15 +1031,7 @@ int main (int argc, char **argv)
 	Settings.TurboSkipFrames = 15;
 	Settings.CartAName[0] = 0;
 	Settings.CartBName[0] = 0;
-#ifdef NETPLAY_SUPPORT
-	Settings.ServerName[0] = 0;
-#endif
-
-#ifdef JOYSTICK_SUPPORT
-	unixSettings.JoystickEnabled = TRUE;
-#else
 	unixSettings.JoystickEnabled = FALSE;
-#endif
 	unixSettings.ThreadSound = TRUE;
 	unixSettings.SoundBufferSize = 100;
 	unixSettings.SoundFragmentSize = 2048;
@@ -1553,18 +1145,6 @@ int main (int argc, char **argv)
 
 	CPU.Flags = saved_flags;
 	Settings.StopEmulation = FALSE;
-
-#ifdef DEBUGGER
-	struct sigaction sa;
-	sa.sa_handler = sigbrkhandler;
-#ifdef SA_RESTART
-	sa.sa_flags = SA_RESTART;
-#else
-	sa.sa_flags = 0;
-#endif
-	sigemptyset(&sa.sa_mask);
-	sigaction(SIGINT, &sa, NULL);
-#endif
 
 	S9xInitInputDevices();
 	S9xInitDisplay(argc, argv);
