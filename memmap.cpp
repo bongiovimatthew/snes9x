@@ -2027,7 +2027,7 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 	return (FALSE);
 }
 
-uint8 S9xDebugGetByte (uint32 Address)
+uint8 CMemory::S9xDebugGetByte (uint32 Address)
 {
 	int		block = (Address & 0xffffff) >> MEMMAP_SHIFT;
 	uint8	*GetAddress = Memory.Map[block];
