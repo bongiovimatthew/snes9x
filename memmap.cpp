@@ -2016,7 +2016,8 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 		// TODO: Also try using 0x7E0D43 (with 7E). Other files seem to use only 4 when accessing SRAM
 		// Memory.SRAM[]
 		uint32 Address = 0x0D43;
-		uint8 byte = (Memory.SRAM[(Address >> 2) & 0xffff] >> ((Address & 3) << 1)) &  3;
+		// uint8 byte = (Memory.SRAM[(Address >> 2) & 0xffff] >> ((Address & 3) << 1)) &  3;
+		uint8 byte = *(Memory.SRAM + (Address & 0xffff));
 		if (!fwrite((char *) byte, size, 1, file))
 			printf ("Couldn't write to SRAM file.\n");
 		fclose(file);
