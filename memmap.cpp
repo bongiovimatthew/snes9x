@@ -785,6 +785,45 @@ static bool8 ReadIPSPatch (Stream *, long, int32 &);
 static int unzFindExtension (unzFile &, const char *, bool restart = TRUE, bool print = TRUE, bool allowExact = FALSE);
 #endif
 
+static const uint32 playerOffsets[4] = {0, 2, 4, 6};
+
+struct GameData
+{
+	uint32 secsLeftInQuarter;
+	uint32 shotClockSecs;
+	uint32 quarter;
+
+	uint32 team1Score;
+	uint32 team2Score;
+
+	PlayerData[4] players;
+};
+
+struct PlayerData 
+{
+	Position position;
+	PlayerStats stats;
+};
+
+struct PlayerStats
+{
+	uint32 shotsMade;
+	uint32 blocks;
+	uint32 steals;
+	uint32 rebounds;
+	uint32 threesMade;
+	uint32 points;
+	uint32 dunks;
+};
+
+struct Position 
+{
+	uint32 x;
+	uint32 y;
+	uint32 z;
+};
+
+
 // deinterleave
 
 static void S9xDeinterleaveType1 (int size, uint8 *base)
@@ -2014,24 +2053,24 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 	uint32 SHOT_CLOCK = 0x0DA5;
 	uint32 QUARTER = 0x0DAB;
 
+	uint32 PLAYER_SHOTS_MADE = 0x107F;
+	uint32 PLAYER_BLOCKS = 0x1087;
+	uint32 PLAYER_STEALS = 0x108F;
+	uint32 PLAYER_REBOUNDS = 0x1097;
+	uint32 PLAYER_THREES_MADE = 0x109F;
 	uint32 PLAYER_POINTS = 0x10A7;
-	
-	uint32 P1_OFFSET = 0;
-	uint32 P2_OFFSET = 2;
-	uint32 P3_OFFSET = 4;
-	uint32 P4_OFFSET = 6;
+	uint32 PLAYER_DUNKS = 0x10AF;
 
-	// uint8 byte = S9xDebugGetByte(Address);
 	printf("Team 1 Score: %u\n", S9xDebugGetByte(TEAM_1_SCORE));
 	printf("Team 2 Score: %u\n", S9xDebugGetByte(TEAM_2_SCORE));
 	printf("Game clock: %u\n", S9xDebugGetByte(GAME_CLOCK));
 	printf("Shot clock: %u\n", S9xDebugGetByte(SHOT_CLOCK));
 	printf("Quarter: %u\n", S9xDebugGetByte(QUARTER));
 
-	printf("P1 Points: %u\n", S9xDebugGetByte(PLAYER_POINTS + P1_OFFSET));
-	printf("P2 Points: %u\n", S9xDebugGetByte(PLAYER_POINTS + P2_OFFSET));
-	printf("P3 Points: %u\n", S9xDebugGetByte(PLAYER_POINTS + P3_OFFSET));
-	printf("P4 Points: %u\n", S9xDebugGetByte(PLAYER_POINTS + P4_OFFSET));
+	for (playerOffset : playerOffsets){
+		printf("P%u Points: %u\n", playerOffset + 1, S9xDebugGetByte(PLAYER_POINTS + playerOffset));
+		printf("P%u Points: %u\n", playerOffset + 1, S9xDebugGetByte(PLAYER_SHOTS_MADE + playerOffset));
+	}
 	
 	return (TRUE);
 }
