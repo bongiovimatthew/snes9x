@@ -2017,7 +2017,7 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 		// Memory.SRAM[]
 		uint32 Address = 0x0D43;
 		// uint8 byte = (Memory.SRAM[(Address >> 2) & 0xffff] >> ((Address & 3) << 1)) &  3;
-		uint8 byte = debug::S9xDebugGetByte(Address);
+		uint8 byte = S9xDebugGetByte(Address);
 		if (!fwrite((char *) byte, size, 1, file))
 			printf ("Couldn't write to SRAM file.\n");
 		fclose(file);
@@ -2026,6 +2026,44 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 
 	return (FALSE);
 }
+
+uint8 S9xDebugGetByte (uint32 Address)
+{
+	int		block = (Address & 0xffffff) >> MEMMAP_SHIFT;
+	uint8	*GetAddress = Memory.Map[block];
+	uint8	byte = 0;
+
+	if (GetAddress >= (uint8 *) CMemory::MAP_LAST)
+	{
+		byte = *(GetAddress + (Address & 0xffff));
+		return (byte);
+	}
+
+	switch ((pint) GetAddress)
+	{
+		case CMemory::MAP_LOROM_SRAM:
+		case CMemory::MAP_SA1RAM:
+			byte = *(Memory.SRAM + ((((Address & 0xff0000) >> 1) | (Address & 0x7fff)) & Memory.SRAMMask));
+			return (byte);
+
+		case CMemory::MAP_LOROM_SRAM_B:
+			byte = *(Multi.sramB + ((((Address & 0xff0000) >> 1) | (Address & 0x7fff)) & Multi.sramMaskB));
+			return (byte);
+
+		case CMemory::MAP_HIROM_SRAM:
+		case CMemory::MAP_RONLY_SRAM:
+			byte = *(Memory.SRAM + (((Address & 0x7fff) - 0x6000 + ((Address & 0xf0000) >> 3)) & Memory.SRAMMask));
+			return (byte);
+
+		case CMemory::MAP_BWRAM:
+			byte = *(Memory.BWRAM + ((Address & 0x7fff) - 0x6000));
+			return (byte);
+
+		default:
+			return (byte);
+	}
+}
+
 
 bool8 CMemory::SaveSRAM (const char *filename)
 {
