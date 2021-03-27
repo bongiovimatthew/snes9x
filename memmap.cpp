@@ -2006,11 +2006,33 @@ bool8 CMemory::LoadSRAM (const char *filename)
 
 bool8 CMemory::SaveLTBBMemory (const char *filename)
 {
-	// 0x7E0D43 - Team 1 score 
+	// 0x0D43 - Team 1 score 
 	// Game clock (in number of seconds remaining) 0x0DA1
-	uint32 Address = 0x0D43;
+	uint32 TEAM_1_SCORE = 0x0D43;
+	uint32 TEAM_2_SCORE = 0x0D45;
+	uint32 GAME_CLOCK = 0x0DA1;
+	uint32 SHOT_CLOCK = 0x0DA5;
+	uint32 QUARTER = 0x0DAB;
+
+	uint32 PLAYER_POINTS = 0x10A7;
+	
+	uint32 P1_OFFSET = 0;
+	uint32 P2_OFFSET = 1;
+	uint32 P3_OFFSET = 2;
+	uint32 P4_OFFSET = 3;
+
 	uint8 byte = S9xDebugGetByte(Address);
-	printf("byte: %u\n", byte);
+	printf("Team 1 Score: %u\n", S9xDebugGetByte(TEAM_1_SCORE));
+	printf("Team 2 Score: %u\n", S9xDebugGetByte(TEAM_2_SCORE));
+	printf("Game clock: %u\n", S9xDebugGetByte(GAME_CLOCK));
+	printf("Shot clock: %u\n", S9xDebugGetByte(SHOT_CLOCK));
+	printf("Quarter: %u\n", S9xDebugGetByte(QUARTER));
+
+	printf("P1 Points: %u\n", S9xDebugGetByte(PLAYER_POINTS + P1_OFFSET));
+	printf("P2 Points: %u\n", S9xDebugGetByte(PLAYER_POINTS + P2_OFFSET));
+	printf("P3 Points: %u\n", S9xDebugGetByte(PLAYER_POINTS + P3_OFFSET));
+	printf("P4 Points: %u\n", S9xDebugGetByte(PLAYER_POINTS + P4_OFFSET));
+	
 	return (TRUE);
 }
 
