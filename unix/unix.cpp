@@ -177,7 +177,6 @@ namespace {
 	};
 
 	S9xAudioOutput* s_AudioOutput = NULL;
-#endif // NOSOUND
 
 }
 
