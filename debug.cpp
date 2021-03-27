@@ -4,8 +4,6 @@
    For further information, consult the LICENSE file in the root directory.
 \*****************************************************************************/
 
-#ifdef DEBUGGER
-
 #include <stdarg.h>
 #include "snes9x.h"
 #include "memmap.h"
@@ -2449,5 +2447,3 @@ void S9xPrintHVPosition (char *s)
 {
 	sprintf(s, "HC:%04ld VC:%03ld FC:%02d", (long) CPU.Cycles, (long) CPU.V_Counter, IPPU.FrameCount);
 }
-
-#endif
