@@ -4,6 +4,8 @@
    For further information, consult the LICENSE file in the root directory.
 \*****************************************************************************/
 
+#include <iostream>
+#include <fstream>
 #include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
@@ -1612,40 +1614,6 @@ int main (int argc, char **argv)
 	S9xSetupDefaultKeymap();
 	S9xTextMode();
 
-#ifdef NETPLAY_SUPPORT
-	if (strlen(Settings.ServerName) == 0)
-	{
-		char	*server = getenv("S9XSERVER");
-		if (server)
-		{
-			strncpy(Settings.ServerName, server, 127);
-			Settings.ServerName[127] = 0;
-		}
-	}
-
-	char	*port = getenv("S9XPORT");
-	if (Settings.Port >= 0 && port)
-		Settings.Port = atoi(port);
-	else
-	if (Settings.Port < 0)
-		Settings.Port = -Settings.Port;
-
-	if (Settings.NetPlay)
-	{
-		NetPlay.MaxFrameSkip = 10;
-
-		unixSettings.rewindBufferSize = 0;
-
-		if (!S9xNPConnectToServer(Settings.ServerName, Settings.Port, Memory.ROMName))
-		{
-			fprintf(stderr, "Failed to connect to server %s on port %d.\n", Settings.ServerName, Settings.Port);
-			S9xExit();
-		}
-
-		fprintf(stderr, "Connected to server %s on port %d as player #%d playing %s.\n", Settings.ServerName, Settings.Port, NetPlay.Player, Memory.ROMName);
-	}
-#endif
-
 	if (play_smv_filename)
 	{
 		uint32	flags = CPU.Flags & (DEBUG_MODE_FLAG | TRACE_FLAG);
@@ -1680,56 +1648,12 @@ int main (int argc, char **argv)
 
 	sprintf(String, "\"%s\" %s: %s", Memory.ROMName, TITLE, VERSION);
 	S9xSetTitle(String);
-
-#ifdef JOYSTICK_SUPPORT
-	uint32	JoypadSkip = 0;
-#endif
-
 	S9xSetSoundMute(FALSE);
 
-#ifdef NETPLAY_SUPPORT
-	bool8	NP_Activated = Settings.NetPlay;
-#endif
-
+	// Main unix loop
 	while (1)
 	{
-	#ifdef NETPLAY_SUPPORT
-		if (NP_Activated)
-		{
-			if (NetPlay.PendingWait4Sync && !S9xNPWaitForHeartBeatDelay(100))
-			{
-				S9xProcessEvents(FALSE);
-				continue;
-			}
-
-			for (int J = 0; J < 8; J++)
-				old_joypads[J] = MovieGetJoypad(J);
-
-			for (int J = 0; J < 8; J++)
-				MovieSetJoypad(J, joypads[J]);
-
-			if (NetPlay.Connected)
-			{
-				if (NetPlay.PendingWait4Sync)
-				{
-					NetPlay.PendingWait4Sync = FALSE;
-					NetPlay.FrameCount++;
-					S9xNPStepJoypadHistory();
-				}
-			}
-			else
-			{
-				fprintf(stderr, "Lost connection to server.\n");
-				S9xExit();
-			}
-		}
-	#endif
-
-	#ifdef DEBUGGER
-		if (!Settings.Paused || (CPU.Flags & (DEBUG_MODE_FLAG | SINGLE_STEP_FLAG)))
-	#else
 		if (!Settings.Paused)
-	#endif
 		{
 			if(rewinding)
 			{
@@ -1745,58 +1669,48 @@ int main (int argc, char **argv)
 			else if(IPPU.TotalEmulatedFrames % unixSettings.rewindGranularity == 0)
 				stateMan.push();
 
+			// Before calling the main loop, log the memory we want
+			LogSpecialMemory();
 			S9xMainLoop();
 		}
-                if (Settings.Paused && frame_advance)
-                {
-                        S9xMainLoop();
-                        frame_advance = 0;
-                }
-
-	#ifdef NETPLAY_SUPPORT
-		if (NP_Activated)
+		if (Settings.Paused && frame_advance)
 		{
-			for (int J = 0; J < 8; J++)
-				MovieSetJoypad(J, old_joypads[J]);
+			// This main loop call only occurs when we are paused, but also advancing the frames
+			// We probably don't care about logging the memory in this case, because it should 
+			// mean that the game is in "replay".
+			S9xMainLoop();
+			frame_advance = 0;
 		}
-	#endif
 
-	#ifdef DEBUGGER
-		if (Settings.Paused || (CPU.Flags & DEBUG_MODE_FLAG))
-	#else
 		if (Settings.Paused)
-	#endif
+		{
 			S9xSetSoundMute(TRUE);
+		}
 
-	#ifdef DEBUGGER
-		if (CPU.Flags & DEBUG_MODE_FLAG)
-			S9xDoDebug();
-		else
-	#endif
 		if (Settings.Paused)
 		{
 			S9xProcessEvents(FALSE);
 			usleep(100000);
 		}
 
-	#ifdef JOYSTICK_SUPPORT
-		if (unixSettings.JoystickEnabled && (JoypadSkip++ & 1) == 0)
-		{
-			if (ReadJoysticks() == TRUE) {
-				S9xLatchJSEvent();
-			}
-		}
-	#endif
-
 		S9xProcessEvents(FALSE);
 
-	#ifdef DEBUGGER
-		if (!Settings.Paused && !(CPU.Flags & DEBUG_MODE_FLAG))
-	#else
 		if (!Settings.Paused)
-	#endif
+		{
 			S9xSetSoundMute(FALSE);
+		}
 	}
 
 	return (0);
+}
+
+static void LogSpecialMemory (void)
+{
+
+	ofstream myfile;
+  	myfile.open ("memory_test.txt");
+  	myfile << "Writing this to a file.\n";
+  	myfile.close();
+
+	return 0;
 }
