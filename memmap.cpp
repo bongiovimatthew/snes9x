@@ -2067,7 +2067,7 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 	printf("Shot clock: %u\n", S9xDebugGetByte(SHOT_CLOCK));
 	printf("Quarter: %u\n", S9xDebugGetByte(QUARTER));
 
-	for (playerOffset : playerOffsets){
+	for (uint32 playerOffset : playerOffsets){
 		printf("P%u Points: %u\n", playerOffset + 1, S9xDebugGetByte(PLAYER_POINTS + playerOffset));
 		printf("P%u Shots made: %u\n", playerOffset + 1, S9xDebugGetByte(PLAYER_SHOTS_MADE + playerOffset));
 	}
