@@ -2021,7 +2021,7 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 	uint32 P3_OFFSET = 2;
 	uint32 P4_OFFSET = 3;
 
-	uint8 byte = S9xDebugGetByte(Address);
+	// uint8 byte = S9xDebugGetByte(Address);
 	printf("Team 1 Score: %u\n", S9xDebugGetByte(TEAM_1_SCORE));
 	printf("Team 2 Score: %u\n", S9xDebugGetByte(TEAM_2_SCORE));
 	printf("Game clock: %u\n", S9xDebugGetByte(GAME_CLOCK));
