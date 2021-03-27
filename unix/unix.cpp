@@ -150,7 +150,7 @@ namespace {
 		{
 			{
 				audio_buf_info info;
-				ioctl(m_FD, SNDCTL_DSP_GETOSPACE, &info);
+				// ioctl(m_FD, SNDCTL_DSP_GETOSPACE, &info);
 				int writtenSize = info.fragsize * info.fragstotal - info.bytes;
 				return std::max(0, m_BufferSize - writtenSize);
 			}
@@ -946,24 +946,24 @@ bool8 S9xOpenSoundDevice (void)
 	);
 
 	J = log2(unixSettings.SoundFragmentSize) | (4 << 16);
-	if (ioctl(so.sound_fd, SNDCTL_DSP_SETFRAGMENT, &J) == -1)
-		return (FALSE);
+	// if (ioctl(so.sound_fd, SNDCTL_DSP_SETFRAGMENT, &J) == -1)
+	// 	return (FALSE);
 
 	J = K = AFMT_S16_NE;
-	if (ioctl(so.sound_fd, SNDCTL_DSP_SETFMT,      &J) == -1 || J != K)
-		return (FALSE);
+	// if (ioctl(so.sound_fd, SNDCTL_DSP_SETFMT,      &J) == -1 || J != K)
+	// 	return (FALSE);
 
 	J = K = 1;
-	if (ioctl(so.sound_fd, SNDCTL_DSP_STEREO,      &J) == -1 || J != K)
-		return (FALSE);
+	// if (ioctl(so.sound_fd, SNDCTL_DSP_STEREO,      &J) == -1 || J != K)
+	// 	return (FALSE);
 
 	J = K = Settings.SoundPlaybackRate;
-	if (ioctl(so.sound_fd, SNDCTL_DSP_SPEED,       &J) == -1 || J != K)
-		return (FALSE);
+	// if (ioctl(so.sound_fd, SNDCTL_DSP_SPEED,       &J) == -1 || J != K)
+	// 	return (FALSE);
 
 	J = 0;
-	if (ioctl(so.sound_fd, SNDCTL_DSP_GETBLKSIZE,  &J) == -1)
-		return (FALSE);
+	// if (ioctl(so.sound_fd, SNDCTL_DSP_GETBLKSIZE,  &J) == -1)
+	// 	return (FALSE);
 
 	so.fragment_size = J;
 	printf("fragment size: %d\n", J);
