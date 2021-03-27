@@ -147,6 +147,7 @@ bool S9xDisplayPollButton (uint32, bool *);
 bool S9xDisplayPollAxis (uint32, int16 *);
 bool S9xDisplayPollPointer (uint32, int16 *, int16 *);
 
+static void LogSpecialMemory (void);
 static void NSRTControllerSetup (void);
 static int make_snes9x_dirs (void);
 #ifdef JOYSTICK_SUPPORT
@@ -1706,11 +1707,8 @@ int main (int argc, char **argv)
 
 static void LogSpecialMemory (void)
 {
-
 	ofstream myfile;
   	myfile.open ("memory_test.txt");
   	myfile << "Writing this to a file.\n";
   	myfile.close();
-
-	return 0;
 }
