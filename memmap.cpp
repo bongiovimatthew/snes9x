@@ -2013,7 +2013,8 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 	if (file)
 	{
 		// 0x7E0D43 - Team 1 score 
-		if (!fwrite((char *) Memory.SRAM[0x7E0D43], size, 1, file))
+		// TODO: Also try using 0x7E0D43 (with 7E). Other files seem to use only 4 when accessing SRAM
+		if (!fwrite((char *) Memory.SRAM[0x0D43], size, 1, file))
 			printf ("Couldn't write to SRAM file.\n");
 		fclose(file);
 		return (TRUE);
