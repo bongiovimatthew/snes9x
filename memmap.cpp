@@ -2013,7 +2013,7 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 	if (file)
 	{
 		// 0x7E0D43 - Team 1 score 
-		uint32 Address = 0x7E149A;
+		uint32 Address = 0x04;
 		uint8 byte = S9xDebugGetByte(Address);
 		printf("byte: %u\n", byte);
 		// if (!fwrite((char *) byte, size, 1, file))
