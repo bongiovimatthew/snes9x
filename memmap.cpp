@@ -820,6 +820,8 @@ struct GameData
 	uint32 team1Score;
 	uint32 team2Score;
 
+	Position ball;
+
 	// PlayerData[] players;
 };
 
@@ -2044,13 +2046,15 @@ bool8 CMemory::LoadSRAM (const char *filename)
 
 bool8 CMemory::SaveLTBBMemory (const char *filename)
 {
-	// 0x0D43 - Team 1 score 
-	// Game clock (in number of seconds remaining) 0x0DA1
 	uint32 TEAM_1_SCORE = 0x0D43;
 	uint32 TEAM_2_SCORE = 0x0D45;
 	uint32 GAME_CLOCK = 0x0DA1;
 	uint32 SHOT_CLOCK = 0x0DA5;
 	uint32 QUARTER = 0x0DAB;
+
+	uint32 BALL_POS_X = 0x10AF;
+	// TODO: uint32 BALL_POS_Y = 0x10AF;
+	// TODO: uint32 BALL_POS_Z = 0x0C77;
 
 	uint32 PLAYER_SHOTS_MADE = 0x107F;
 	uint32 PLAYER_BLOCKS = 0x1087;
@@ -2060,15 +2064,24 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 	uint32 PLAYER_POINTS = 0x10A7;
 	uint32 PLAYER_DUNKS = 0x10AF;
 
+	uint32 PLAYER_POS_X = 0x010A;
+	uint32 PLAYER_POS_Y = 0x024C;
+	// TODO: uint32 PLAYER_POS_Z = 0x10AF;
+
 	printf("Team 1 Score: %u\n", S9xDebugGetByte(TEAM_1_SCORE));
 	printf("Team 2 Score: %u\n", S9xDebugGetByte(TEAM_2_SCORE));
 	printf("Game clock: %u\n", S9xDebugGetByte(GAME_CLOCK));
 	printf("Shot clock: %u\n", S9xDebugGetByte(SHOT_CLOCK));
 	printf("Quarter: %u\n", S9xDebugGetByte(QUARTER));
 
-	for (uint32 playerOffset : playerOffsets){
-		printf("P%u Points: %u\n", playerOffset + 1, S9xDebugGetByte(PLAYER_POINTS + playerOffset));
-		printf("P%u Shots made: %u\n", playerOffset + 1, S9xDebugGetByte(PLAYER_SHOTS_MADE + playerOffset));
+	int idx = 0;
+	for (uint32 playerOffset : playerOffsets)
+	{
+		idx++;
+		printf("P%u Points: %u\n", idx, S9xDebugGetByte(PLAYER_POINTS + playerOffset));
+		printf("P%u Shots made: %u\n", idx, S9xDebugGetByte(PLAYER_SHOTS_MADE + playerOffset));
+		printf("P%u x: %u\n", idx, S9xDebugGetByte(PLAYER_POS_X + playerOffset));
+		printf("P%u y: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Y + playerOffset));
 	}
 	
 	return (TRUE);
