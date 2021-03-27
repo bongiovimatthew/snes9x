@@ -2007,7 +2007,7 @@ bool8 CMemory::LoadSRAM (const char *filename)
 bool8 CMemory::SaveLTBBMemory (const char *filename)
 {
 	// 0x7E0D43 - Team 1 score 
-	uint32 Address = 0x04;
+	uint32 Address = 0x0DA1; // 0x04;
 	uint8 byte = S9xDebugGetByte(Address);
 	printf("byte: %u\n", byte);
 	return (TRUE);
