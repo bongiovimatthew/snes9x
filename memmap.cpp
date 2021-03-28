@@ -787,44 +787,6 @@ static int unzFindExtension (unzFile &, const char *, bool restart = TRUE, bool 
 
 static const uint32 playerOffsets[4] = {0, 2, 4, 6};
 
-struct PlayerStats
-{
-	uint32 shotsMade;
-	uint32 blocks;
-	uint32 steals;
-	uint32 rebounds;
-	uint32 threesMade;
-	uint32 points;
-	uint32 dunks;
-};
-
-struct Position 
-{
-	uint32 x;
-	uint32 y;
-	uint32 z;
-};
-
-struct PlayerData 
-{
-	Position position;
-	PlayerStats stats;
-};
-
-struct GameData
-{
-	uint32 secsLeftInQuarter;
-	uint32 shotClockSecs;
-	uint32 quarter;
-
-	uint32 team1Score;
-	uint32 team2Score;
-
-	Position ball;
-
-	// PlayerData[] players;
-};
-
 // deinterleave
 
 static void S9xDeinterleaveType1 (int size, uint8 *base)
@@ -2044,7 +2006,7 @@ bool8 CMemory::LoadSRAM (const char *filename)
 	return (TRUE);
 }
 
-bool8 CMemory::SaveLTBBMemory (const char *filename)
+GameData CMemory::SaveLTBBMemory (const char *filename)
 {
 	uint32 TEAM_1_SCORE = 0x0D43;
 	uint32 TEAM_2_SCORE = 0x0D45;
@@ -2087,8 +2049,11 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 		// printf("P%u y: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Y + playerOffset));
 		// printf("P%u z: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Z + playerOffset));
 	}
+
+	Position ball = {BALL_POS_X, BALL_POS_Y, BALL_POS_Z};
+	GameData gameData = {S9xDebugGetByte(GAME_CLOCK), S9xDebugGetByte(SHOT_CLOCK), S9xDebugGetByte(QUARTER), S9xDebugGetByte(TEAM_1_SCORE), S9xDebugGetByte(TEAM_2_SCORE), ball};
 	
-	return (TRUE);
+	return (gameData);
 }
 
 uint8 CMemory::S9xDebugGetByte (uint32 Address)

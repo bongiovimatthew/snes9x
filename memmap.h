@@ -12,6 +12,44 @@
 #define MEMMAP_SHIFT		(12)
 #define MEMMAP_MASK			(MEMMAP_BLOCK_SIZE - 1)
 
+struct PlayerStats
+{
+	uint32 shotsMade;
+	uint32 blocks;
+	uint32 steals;
+	uint32 rebounds;
+	uint32 threesMade;
+	uint32 points;
+	uint32 dunks;
+};
+
+struct Position 
+{
+	uint32 x;
+	uint32 y;
+	uint32 z;
+};
+
+struct PlayerData 
+{
+	Position position;
+	PlayerStats stats;
+};
+
+struct GameData
+{
+	uint32 secsLeftInQuarter;
+	uint32 shotClockSecs;
+	uint32 quarter;
+
+	uint32 team1Score;
+	uint32 team2Score;
+
+	Position ball;
+
+	// PlayerData[] players;
+};
+
 struct CMemory
 {
 	enum
@@ -115,7 +153,7 @@ struct CMemory
 	bool8	LoadGNEXT ();
 	bool8	LoadSRAM (const char *);
 	bool8	SaveSRAM (const char *);
-	bool8   SaveLTBBMemory (const char *);
+	GameData   SaveLTBBMemory (const char *);
 	uint8   S9xDebugGetByte (uint32);
 	void	ClearSRAM (bool8 onlyNonSavedSRAM = 0);
 	bool8	LoadSRTC (void);
