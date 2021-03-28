@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <sys/soundcard.h>
 #include <sys/mman.h>
+#include <sys/socket.h>
 #include "snes9x.h"
 #include "memmap.h"
 #include "apu/apu.h"
@@ -1181,6 +1182,29 @@ int main (int argc, char **argv)
 	sprintf(String, "\"%s\" %s: %s", Memory.ROMName, TITLE, VERSION);
 	S9xSetTitle(String);
 	S9xSetSoundMute(FALSE);
+
+	// Attempt to connect to the LTBB Server process in order to send data
+	int sockfd, portno, n;
+    struct sockaddr_in serv_addr;
+    struct hostent *server;
+
+    portno = 3198;
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) 
+        error("ERROR opening socket");
+    server = gethostbyname("localhost");
+    if (server == NULL) {
+        fprintf(stderr,"ERROR, no such host\n");
+        exit(0);
+    }
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    bcopy((char *)server->h_addr, 
+         (char *)&serv_addr.sin_addr.s_addr,
+         server->h_length);
+    serv_addr.sin_port = htons(portno);
+    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
+        error("ERROR connecting");
 
 	// Main unix loop
 	while (1)

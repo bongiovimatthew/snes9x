@@ -2052,9 +2052,9 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 	uint32 SHOT_CLOCK = 0x0DA5;
 	uint32 QUARTER = 0x0DAB;
 
-	uint32 BALL_POS_X = 0x0C73;
-	uint32 BALL_POS_Y = 0x0C75;
-	uint32 BALL_POS_Z = 0x0C77;
+	uint32 BALL_POS_X = 0x0C73; // This one is wrong
+	uint32 BALL_POS_Y = 0x0C75; // This one is wrong
+	uint32 BALL_POS_Z = 0x0C77; // This one is sort of right
 
 	uint32 PLAYER_SHOTS_MADE = 0x107F;
 	uint32 PLAYER_BLOCKS = 0x1087;
@@ -2075,8 +2075,8 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 	// printf("Quarter: %u\n", S9xDebugGetByte(QUARTER));
 	
 	printf("Ball x: %u\n", S9xDebugGetByte(BALL_POS_X));
-	printf("Ball x: %u\n", S9xDebugGetByte(BALL_POS_Y));
-	printf("Ball x: %u\n", S9xDebugGetByte(BALL_POS_Z));
+	printf("Ball y: %u\n", S9xDebugGetByte(BALL_POS_Y));
+	printf("Ball z: %u\n", S9xDebugGetByte(BALL_POS_Z));
 
 	int idx = 0;
 	for (uint32 playerOffset : playerOffsets)
