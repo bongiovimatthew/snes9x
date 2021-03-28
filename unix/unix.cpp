@@ -1273,7 +1273,7 @@ static int ConnectToLTBBServer (void)
 
 static void LogSpecialMemory (int sockfd)
 {
-	GameData data = Memory.SaveLTBBMemory("data_output.txt");
+	GameData data = Memory.GetLTBBGameData();
 
 	// TODO: Add protobuf for serializing and sending this data 
 	// https://developers.google.com/protocol-buffers/docs/cpptutorial

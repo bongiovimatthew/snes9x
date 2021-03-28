@@ -153,7 +153,7 @@ struct CMemory
 	bool8	LoadGNEXT ();
 	bool8	LoadSRAM (const char *);
 	bool8	SaveSRAM (const char *);
-	GameData   SaveLTBBMemory (const char *);
+	GameData   GetLTBBGameData ();
 	uint8   S9xDebugGetByte (uint32);
 	void	ClearSRAM (bool8 onlyNonSavedSRAM = 0);
 	bool8	LoadSRTC (void);

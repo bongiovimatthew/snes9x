@@ -2006,7 +2006,7 @@ bool8 CMemory::LoadSRAM (const char *filename)
 	return (TRUE);
 }
 
-GameData CMemory::SaveLTBBMemory (const char *filename)
+GameData CMemory::GetLTBBGameData ()
 {
 	uint32 TEAM_1_SCORE = 0x0D43;
 	uint32 TEAM_2_SCORE = 0x0D45;
