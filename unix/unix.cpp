@@ -31,6 +31,9 @@
 #include "display.h"
 #include "conffile.h"
 #include "statemanager.h"
+#include <stdio.h>
+#include <netinet/in.h>
+#include <netdb.h> 
 
 typedef std::pair<std::string, std::string>	strpair_t;
 
