@@ -2040,9 +2040,22 @@ GameData CMemory::GetLTBBGameData ()
 	printf("Ball y: %u\n", S9xDebugGetByte(BALL_POS_Y));
 	printf("Ball z: %u\n", S9xDebugGetByte(BALL_POS_Z));
 
+	PlayerData players[4];
 	int idx = 0;
 	for (uint32 playerOffset : playerOffsets)
 	{
+		PlayerStats stats = {
+			S9xDebugGetByte(PLAYER_SHOTS_MADE + playerOffset), 
+			S9xDebugGetByte(PLAYER_BLOCKS + playerOffset),
+			S9xDebugGetByte(PLAYER_STEALS + playerOffset),
+			S9xDebugGetByte(PLAYER_REBOUNDS + playerOffset),
+			S9xDebugGetByte(PLAYER_THREES_MADE + playerOffset),
+			S9xDebugGetByte(PLAYER_POINTS + playerOffset),
+			S9xDebugGetByte(PLAYER_DUNKS + playerOffset)
+		};
+		Position playerPos = {S9xDebugGetByte(PLAYER_POS_X + playerOffset), S9xDebugGetByte(PLAYER_POS_Y + playerOffset), S9xDebugGetByte(PLAYER_POS_Z + playerOffset)};
+		players[idx] = {playerPos, stats};
+
 		idx++;
 		printf("P%u Points: %u\n", idx, S9xDebugGetByte(PLAYER_POINTS + playerOffset));
 		// printf("P%u x: %u\n", idx, S9xDebugGetByte(PLAYER_POS_X + playerOffset));
@@ -2051,7 +2064,7 @@ GameData CMemory::GetLTBBGameData ()
 	}
 
 	Position ball = {BALL_POS_X, BALL_POS_Y, BALL_POS_Z};
-	GameData gameData = {S9xDebugGetByte(GAME_CLOCK), S9xDebugGetByte(SHOT_CLOCK), S9xDebugGetByte(QUARTER), S9xDebugGetByte(TEAM_1_SCORE), S9xDebugGetByte(TEAM_2_SCORE), ball};
+	GameData gameData = {S9xDebugGetByte(GAME_CLOCK), S9xDebugGetByte(SHOT_CLOCK), S9xDebugGetByte(QUARTER), S9xDebugGetByte(TEAM_1_SCORE), S9xDebugGetByte(TEAM_2_SCORE), ball, players};
 	
 	return (gameData);
 }

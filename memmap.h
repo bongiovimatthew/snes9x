@@ -47,7 +47,7 @@ struct GameData
 
 	Position ball;
 
-	// PlayerData[] players;
+	PlayerData players[4];
 };
 
 struct CMemory
