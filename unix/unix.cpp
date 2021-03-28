@@ -1212,7 +1212,7 @@ int main (int argc, char **argv)
 	char buffer[1] = {'x'};
 	n = write(sockfd, buffer, strlen(buffer));
     if (n < 0) 
-         error("ERROR writing to socket");
+         perror("ERROR writing to socket");
 
 	// Main unix loop
 	while (1)
