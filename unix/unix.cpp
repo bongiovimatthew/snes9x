@@ -109,6 +109,7 @@ bool S9xDisplayPollAxis (uint32, int16 *);
 bool S9xDisplayPollPointer (uint32, int16 *, int16 *);
 
 static void LogSpecialMemory (int);
+static int ConnectToLTBBServer (void);
 static void NSRTControllerSetup (void);
 static int make_snes9x_dirs (void);
 
