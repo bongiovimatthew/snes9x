@@ -1250,6 +1250,7 @@ static int ConnectToLTBBServer (void)
     struct sockaddr_in serv_addr;
     struct hostent *server;
 
+    // TODO: Read this from config
     portno = 3005;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
