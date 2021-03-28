@@ -2052,9 +2052,9 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 	uint32 SHOT_CLOCK = 0x0DA5;
 	uint32 QUARTER = 0x0DAB;
 
-	uint32 BALL_POS_X = 0x10AF;
-	// TODO: uint32 BALL_POS_Y = 0x10AF;
-	// TODO: uint32 BALL_POS_Z = 0x0C77;
+	uint32 BALL_POS_X = 0x0C73;
+	uint32 BALL_POS_Y = 0x0C75;
+	uint32 BALL_POS_Z = 0x0C77;
 
 	uint32 PLAYER_SHOTS_MADE = 0x107F;
 	uint32 PLAYER_BLOCKS = 0x1087;
@@ -2066,23 +2066,26 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 
 	uint32 PLAYER_POS_X = 0x010A; // (something crazy, depends on which half of the court you're in)
 	uint32 PLAYER_POS_Y = 0x024C; // (0 is top of court, 255 is bottom)
-	uint32 PLAYER_POS_Z = 0x038E;
+	uint32 PLAYER_POS_Z = 0x038E; // TODO: this address is a guess, and is not correct
 
-	printf("Team 1 Score: %u\n", S9xDebugGetByte(TEAM_1_SCORE));
-	printf("Team 2 Score: %u\n", S9xDebugGetByte(TEAM_2_SCORE));
-	printf("Game clock: %u\n", S9xDebugGetByte(GAME_CLOCK));
-	printf("Shot clock: %u\n", S9xDebugGetByte(SHOT_CLOCK));
-	printf("Quarter: %u\n", S9xDebugGetByte(QUARTER));
+	// printf("Team 1 Score: %u\n", S9xDebugGetByte(TEAM_1_SCORE));
+	// printf("Team 2 Score: %u\n", S9xDebugGetByte(TEAM_2_SCORE));
+	// printf("Game clock: %u\n", S9xDebugGetByte(GAME_CLOCK));
+	// printf("Shot clock: %u\n", S9xDebugGetByte(SHOT_CLOCK));
+	// printf("Quarter: %u\n", S9xDebugGetByte(QUARTER));
+	
+	printf("Ball x: %u\n", S9xDebugGetByte(BALL_POS_X));
+	printf("Ball x: %u\n", S9xDebugGetByte(BALL_POS_Y));
+	printf("Ball x: %u\n", S9xDebugGetByte(BALL_POS_Z));
 
 	int idx = 0;
 	for (uint32 playerOffset : playerOffsets)
 	{
 		idx++;
 		printf("P%u Points: %u\n", idx, S9xDebugGetByte(PLAYER_POINTS + playerOffset));
-		printf("P%u Shots made: %u\n", idx, S9xDebugGetByte(PLAYER_SHOTS_MADE + playerOffset));
-		printf("P%u x: %u\n", idx, S9xDebugGetByte(PLAYER_POS_X + playerOffset));
-		printf("P%u y: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Y + playerOffset));
-		printf("P%u z: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Z + playerOffset));
+		// printf("P%u x: %u\n", idx, S9xDebugGetByte(PLAYER_POS_X + playerOffset));
+		// printf("P%u y: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Y + playerOffset));
+		// printf("P%u z: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Z + playerOffset));
 	}
 	
 	return (TRUE);
