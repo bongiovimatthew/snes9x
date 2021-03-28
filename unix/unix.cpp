@@ -108,7 +108,7 @@ bool S9xDisplayPollButton (uint32, bool *);
 bool S9xDisplayPollAxis (uint32, int16 *);
 bool S9xDisplayPollPointer (uint32, int16 *, int16 *);
 
-static void LogSpecialMemory (void);
+static void LogSpecialMemory (int);
 static void NSRTControllerSetup (void);
 static int make_snes9x_dirs (void);
 
@@ -1186,33 +1186,7 @@ int main (int argc, char **argv)
 	S9xSetTitle(String);
 	S9xSetSoundMute(FALSE);
 
-	// Attempt to connect to the LTBB Server process in order to send data
-	int sockfd, portno, n;
-    struct sockaddr_in serv_addr;
-    struct hostent *server;
-
-    portno = 3005;
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) 
-        perror("ERROR opening socket");
-    server = gethostbyname("localhost");
-    if (server == NULL) {
-        fprintf(stderr,"ERROR, no such host\n");
-        exit(0);
-    }
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, 
-         (char *)&serv_addr.sin_addr.s_addr,
-         server->h_length);
-    serv_addr.sin_port = htons(portno);
-    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
-        perror("ERROR connecting");
-	
-	char buffer[1] = {'x'};
-	n = write(sockfd, buffer, strlen(buffer));
-    if (n < 0) 
-         perror("ERROR writing to socket");
+	int sockfd = ConnectToLTBBServer();
 
 	// Main unix loop
 	while (1)
@@ -1234,11 +1208,7 @@ int main (int argc, char **argv)
 				stateMan.push();
 
 			// Before calling the main loop, log the memory we want
-			LogSpecialMemory();
-			char sbuff[1] = {1};
-			write(sockfd, sbuff, 1);
-			write(sockfd, buffer, strlen(buffer));
-
+			LogSpecialMemory(sockfd);
 			S9xMainLoop();
 		}
 		if (Settings.Paused && frame_advance)
@@ -1272,7 +1242,42 @@ int main (int argc, char **argv)
 	return (0);
 }
 
-static void LogSpecialMemory (void)
+static int ConnectToLTBBServer (void)
+{
+	// Attempt to connect to the LTBB Server process in order to send data
+	int sockfd, portno, n;
+    struct sockaddr_in serv_addr;
+    struct hostent *server;
+
+    portno = 3005;
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) 
+        perror("ERROR opening socket");
+    server = gethostbyname("localhost");
+    if (server == NULL) {
+        fprintf(stderr,"ERROR, no such host\n");
+        exit(0);
+    }
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    bcopy((char *)server->h_addr, 
+         (char *)&serv_addr.sin_addr.s_addr,
+         server->h_length);
+    serv_addr.sin_port = htons(portno);
+    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
+        perror("ERROR connecting");
+	
+	return sockfd;
+}
+
+static void LogSpecialMemory (int sockfd)
 {
 	GameData data = Memory.SaveLTBBMemory("data_output.txt");
+
+	// TODO: Add protobuf for serializing and sending this data 
+	// https://developers.google.com/protocol-buffers/docs/cpptutorial
+	char sbuff[1] = {1};
+	char buff[1] = {'x'};
+	write(sockfd, sbuff, 1);
+	write(sockfd, buffer, strlen(buffer));
 }
