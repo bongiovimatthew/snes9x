@@ -2064,7 +2064,7 @@ GameData CMemory::GetLTBBGameData ()
 	}
 
 	Position ball = {BALL_POS_X, BALL_POS_Y, BALL_POS_Z};
-	GameData gameData = {S9xDebugGetByte(GAME_CLOCK), S9xDebugGetByte(SHOT_CLOCK), S9xDebugGetByte(QUARTER), S9xDebugGetByte(TEAM_1_SCORE), S9xDebugGetByte(TEAM_2_SCORE), ball, players};
+	GameData gameData = {S9xDebugGetByte(GAME_CLOCK), S9xDebugGetByte(SHOT_CLOCK), S9xDebugGetByte(QUARTER), S9xDebugGetByte(TEAM_1_SCORE), S9xDebugGetByte(TEAM_2_SCORE), ball, &players};
 	
 	return (gameData);
 }
