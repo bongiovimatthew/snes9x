@@ -1191,7 +1191,7 @@ int main (int argc, char **argv)
     struct sockaddr_in serv_addr;
     struct hostent *server;
 
-    portno = 3004;
+    portno = 3005;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
         perror("ERROR opening socket");
