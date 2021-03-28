@@ -1235,7 +1235,9 @@ int main (int argc, char **argv)
 
 			// Before calling the main loop, log the memory we want
 			LogSpecialMemory();
-			n = write(sockfd, buffer, strlen(buffer));
+			write(sockfd, 1, 1)
+			write(sockfd, buffer, strlen(buffer));
+
 			S9xMainLoop();
 		}
 		if (Settings.Paused && frame_advance)
