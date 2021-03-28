@@ -2066,7 +2066,7 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 
 	uint32 PLAYER_POS_X = 0x010A; // (something crazy, depends on which half of the court you're in)
 	uint32 PLAYER_POS_Y = 0x024C; // (0 is top of court, 255 is bottom)
-	// TODO: uint32 PLAYER_POS_Z = 0x10AF;
+	uint32 PLAYER_POS_Z = 0x038E;
 
 	printf("Team 1 Score: %u\n", S9xDebugGetByte(TEAM_1_SCORE));
 	printf("Team 2 Score: %u\n", S9xDebugGetByte(TEAM_2_SCORE));
@@ -2082,6 +2082,7 @@ bool8 CMemory::SaveLTBBMemory (const char *filename)
 		printf("P%u Shots made: %u\n", idx, S9xDebugGetByte(PLAYER_SHOTS_MADE + playerOffset));
 		printf("P%u x: %u\n", idx, S9xDebugGetByte(PLAYER_POS_X + playerOffset));
 		printf("P%u y: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Y + playerOffset));
+		printf("P%u z: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Z + playerOffset));
 	}
 	
 	return (TRUE);
