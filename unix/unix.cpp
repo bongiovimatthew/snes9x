@@ -1279,9 +1279,11 @@ static void LogSpecialMemory (int sockfd)
 	// TODO: Add protobuf for serializing and sending this data 
 	// https://developers.google.com/protocol-buffers/docs/cpptutorial
 	char txbuf[100];
-	strcpy_s(txbuf, "test message");
-	char sbuff[1] = {12};
-	
-	write(sockfd, sbuff, 1);
+	strcpy(txbuf, "test message");
+
+	int length = strlen(txbuf);
+	const char* pBytesLength = (const char*)&length;
+
+	write(sockfd, pBytesLength, 1);
 	write(sockfd, txbuf, strlen(txbuf));
 }
