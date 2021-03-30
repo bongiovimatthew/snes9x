@@ -2030,6 +2030,9 @@ GameData CMemory::GetLTBBGameData ()
 	uint32 LAST_SHOT_IS_LAYUP = 0x0C8B;
 	uint32 SHOT_WILL_BE_GOOD = 0x0C83;
 
+	uint32 SHOT_IN_AIR = 0x0C81;
+	uint32 SHOT_BEING_DUNKED = 0x0C89;
+
 	uint32 PLAYER_POS_X = 0x010A; // (something crazy, depends on which half of the court you're in)
 	uint32 PLAYER_POS_Y = 0x024C; // (0 is top of court, 255 is bottom)
 	uint32 PLAYER_POS_Z = 0x038E; // TODO: this address is a guess, and is not correct
@@ -2047,6 +2050,8 @@ GameData CMemory::GetLTBBGameData ()
 	printf("Last player taking shot: %u\n", S9xDebugGetByte(LAST_PLAYER_TAKING_SHOT));
 	printf("Last shot is layup: %u\n", S9xDebugGetByte(LAST_SHOT_IS_LAYUP));
 	printf("Shot will be good: %u\n", S9xDebugGetByte(SHOT_WILL_BE_GOOD));
+	printf("Shot is in the air: %u\n", S9xDebugGetByte(SHOT_IN_AIR));
+	printf("Shot is being dunked/layed up: %u\n", S9xDebugGetByte(SHOT_BEING_DUNKED));
 
 	PlayerData players[4];
 	int idx = 0;
