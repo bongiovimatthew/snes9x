@@ -2026,6 +2026,8 @@ GameData CMemory::GetLTBBGameData ()
 	uint32 PLAYER_POINTS = 0x10A7;
 	uint32 PLAYER_DUNKS = 0x10AF;
 
+	uint32 LAST_PLAYER_TAKING_SHOT = 0x0C87;
+
 	uint32 PLAYER_POS_X = 0x010A; // (something crazy, depends on which half of the court you're in)
 	uint32 PLAYER_POS_Y = 0x024C; // (0 is top of court, 255 is bottom)
 	uint32 PLAYER_POS_Z = 0x038E; // TODO: this address is a guess, and is not correct
@@ -2039,6 +2041,8 @@ GameData CMemory::GetLTBBGameData ()
 	printf("Ball x: %u\n", S9xDebugGetByte(BALL_POS_X));
 	printf("Ball y: %u\n", S9xDebugGetByte(BALL_POS_Y));
 	printf("Ball z: %u\n", S9xDebugGetByte(BALL_POS_Z));
+
+	printf("Last player taking shot: %u\n", S9xDebugGetByte(LAST_PLAYER_TAKING_SHOT));
 
 	PlayerData players[4];
 	int idx = 0;
