@@ -2034,6 +2034,8 @@ GameData CMemory::GetLTBBGameData ()
 	uint32 SHOT_BEING_DUNKED = 0x0C89;
 
 	uint32 PLAYER_POS_X = 0x010A; // (something crazy, depends on which half of the court you're in)
+	uint32 PLAYER_POS_X_EX = 0x010B; 
+	uint32 PLAYER_POS_X_EX_2 = 0x0109;
 	uint32 PLAYER_POS_Y = 0x024C; // (0 is top of court, 255 is bottom)
 	uint32 PLAYER_POS_Z = 0x038E; // TODO: this address is a guess, and is not correct
 
@@ -2073,6 +2075,8 @@ GameData CMemory::GetLTBBGameData ()
 		// printf("P%u Points: %u\n", idx, S9xDebugGetByte(PLAYER_POINTS + playerOffset));
 		if (idx == 1){
 			printf("P%u x: %u\n", idx, S9xDebugGetByte(PLAYER_POS_X + playerOffset));
+			printf("P%u x_af: %u\n", idx, S9xDebugGetByte(PLAYER_POS_X_EX + playerOffset));
+			printf("P%u x_bef: %u\n", idx, S9xDebugGetByte(PLAYER_POS_X_EX_2 + playerOffset));
 			// printf("P%u y: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Y + playerOffset));
 			// printf("P%u z: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Z + playerOffset));
 		}
