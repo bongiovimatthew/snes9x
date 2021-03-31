@@ -2043,15 +2043,15 @@ GameData CMemory::GetLTBBGameData ()
 	// printf("Shot clock: %u\n", S9xDebugGetByte(SHOT_CLOCK));
 	// printf("Quarter: %u\n", S9xDebugGetByte(QUARTER));
 	
-	printf("Ball x: %u\n", S9xDebugGetByte(BALL_POS_X));
-	printf("Ball y: %u\n", S9xDebugGetByte(BALL_POS_Y));
-	printf("Ball z: %u\n", S9xDebugGetByte(BALL_POS_Z));
+	//printf("Ball x: %u\n", S9xDebugGetByte(BALL_POS_X));
+	//printf("Ball y: %u\n", S9xDebugGetByte(BALL_POS_Y));
+	//printf("Ball z: %u\n", S9xDebugGetByte(BALL_POS_Z));
 
-	printf("Last player taking shot: %u\n", S9xDebugGetByte(LAST_PLAYER_TAKING_SHOT));
-	printf("Last shot is layup: %u\n", S9xDebugGetByte(LAST_SHOT_IS_LAYUP));
-	printf("Shot will be good: %u\n", S9xDebugGetByte(SHOT_WILL_BE_GOOD));
-	printf("Shot is in the air: %u\n", S9xDebugGetByte(SHOT_IN_AIR));
-	printf("Shot is being dunked/layed up: %u\n", S9xDebugGetByte(SHOT_BEING_DUNKED));
+	//printf("Last player taking shot: %u\n", S9xDebugGetByte(LAST_PLAYER_TAKING_SHOT));
+	//printf("Last shot is layup: %u\n", S9xDebugGetByte(LAST_SHOT_IS_LAYUP));
+	//printf("Shot will be good: %u\n", S9xDebugGetByte(SHOT_WILL_BE_GOOD));
+	//printf("Shot is in the air: %u\n", S9xDebugGetByte(SHOT_IN_AIR));
+	//printf("Shot is being dunked/layed up: %u\n", S9xDebugGetByte(SHOT_BEING_DUNKED));
 
 	PlayerData players[4];
 	int idx = 0;
@@ -2070,10 +2070,12 @@ GameData CMemory::GetLTBBGameData ()
 		players[idx] = {playerPos, stats};
 
 		idx++;
-		printf("P%u Points: %u\n", idx, S9xDebugGetByte(PLAYER_POINTS + playerOffset));
-		printf("P%u x: %u\n", idx, S9xDebugGetByte(PLAYER_POS_X + playerOffset));
-		printf("P%u y: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Y + playerOffset));
-		printf("P%u z: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Z + playerOffset));
+		// printf("P%u Points: %u\n", idx, S9xDebugGetByte(PLAYER_POINTS + playerOffset));
+		if (idx == 1){
+			printf("P%u x: %u\n", idx, S9xDebugGetByte(PLAYER_POS_X + playerOffset));
+			printf("P%u y: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Y + playerOffset));
+			printf("P%u z: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Z + playerOffset));
+		}
 	}
 
 	Position ball = {BALL_POS_X, BALL_POS_Y, BALL_POS_Z};
