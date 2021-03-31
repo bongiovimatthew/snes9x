@@ -2071,9 +2071,9 @@ GameData CMemory::GetLTBBGameData ()
 
 		idx++;
 		printf("P%u Points: %u\n", idx, S9xDebugGetByte(PLAYER_POINTS + playerOffset));
-		// printf("P%u x: %u\n", idx, S9xDebugGetByte(PLAYER_POS_X + playerOffset));
-		// printf("P%u y: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Y + playerOffset));
-		// printf("P%u z: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Z + playerOffset));
+		printf("P%u x: %u\n", idx, S9xDebugGetByte(PLAYER_POS_X + playerOffset));
+		printf("P%u y: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Y + playerOffset));
+		printf("P%u z: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Z + playerOffset));
 	}
 
 	Position ball = {BALL_POS_X, BALL_POS_Y, BALL_POS_Z};
