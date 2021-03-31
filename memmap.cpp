@@ -2077,6 +2077,8 @@ GameData CMemory::GetLTBBGameData ()
 			// printf("P%u x: %u\n", idx, S9xDebugGetByte(PLAYER_POS_X + playerOffset));
 			// printf("P%u x_af: %u\n", idx, S9xDebugGetByte(PLAYER_POS_X_EX + playerOffset));
 			uint32 TRUE_PLAYER_X = S9xDebugGetByte(PLAYER_POS_X_EX + playerOffset) * 255 + S9xDebugGetByte(PLAYER_POS_X + playerOffset);
+			// TRUE_PLAYER_X goes from 245 to 786 (inclusive) for being in bounds. When players are out of bounds,
+			// they can go below 245 and above 786.
 
 			printf("P%u x_true: %u\n", idx, TRUE_PLAYER_X);
 			// printf("P%u y: %u\n", idx, S9xDebugGetByte(PLAYER_POS_Y + playerOffset));
